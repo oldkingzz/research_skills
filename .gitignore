@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# iCloud 占位文件
+*.icloud
+
+# 读论文时生成的个人产物（应跟论文走，不进本技能仓库）
+qa.md
+*.qa.md
