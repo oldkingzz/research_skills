@@ -1,6 +1,6 @@
 ---
 name: read-paper
-description: Use whenever the user wants to read / summarize / understand / critique an academic paper. Auto-triggers on arxiv URLs (arxiv.org/abs/, arxiv.org/pdf/), arxiv IDs (e.g. 1706.03762), DOIs, paper titles, or natural-language asks like "读这篇 / 看一下 / summarize / explain this paper / 解释一下这篇". Pipeline (Teach mode = default): pulls arxiv LaTeX source via uv-runnable scripts/ingest.py, writes Chinese note.md with bilingual CN+EN Key Takeaways per references/note_schema.md, generates 12-slide .pptx via render_slides.py per references/slide_schema.md, updates a global queue.md. Outputs land in <CWD>/<arxiv-id-slug>/. Three modes available: Skim (3-line verdict, no artifacts), Core (predict-then-verify deep read + paper-card), Teach (default — Claude produces guide + slides, user reads + asks questions). LaTeX source ONLY (no PDF parsing), .pptx output ONLY (no PDF). Cross-platform: same SKILL.md works in Claude Code / Codex CLI / Cursor.
+description: Use whenever the user wants to read / summarize / understand / critique an academic paper. Auto-triggers on arxiv URLs (arxiv.org/abs/, arxiv.org/pdf/), arxiv IDs (e.g. 1706.03762), DOIs, paper titles, or natural-language asks like "读这篇 / 看一下 / summarize / explain this paper / 解释一下这篇". Pipeline (Teach mode = default) produces a strict three-artifact set + slides: (1) note.md — exhaustive faithful Chinese transcription of the PDF, follows paper's own section order, every equation/table/figure/footnote retained, no summarization; (2) qa.md — by default contains ONLY Q1 = symbol/formula/abbreviation lookup table (user-driven Q2+ added later); (3) paper-card.md — canonical 1-screen self-check card (spine, K must-know items, key math, critique, Connect, verdict) used after reading note.md to find gaps; (4) slides.pptx — 12-slide deck. LaTeX source ONLY (no PDF parsing), .pptx output ONLY (no PDF). Three reading modes: Skim (3-line verdict, no files) / Core (predict-then-verify dialogue + all artifacts) / Teach (default — full artifacts, user reads note, asks Q&A via qa.md). Cross-platform: same SKILL.md works in Claude Code / Codex CLI / Cursor.
 ---
 
 # read-paper —「先赌后验」式深读
@@ -82,14 +82,43 @@ description: Use whenever the user wants to read / summarize / understand / crit
 
 ---
 
-## 产物与文件契约
+## 产物与文件契约(v1.2,与 v1.1 大不同)
 
-每篇 paper 默认产出三件套（旁支只 Skim 的可省 guide.md）：
+每篇 paper 默认产出**三件套 + slides**:
 
-- **`guide.md`**（仅 Teach mode 必产）：稳定主讲稿，**通读 paper 后一次性写完**，按"理解曲线"重排（不是逐节复述）。结构建议：TL;DR → 领域背景 → 数学定义 → 架构/方法 → 实验数据 → 批判性评价。**写完基本不动**，除非用户要求重写某段。
-- **`qa.md`**：用户在 VSCode 开着的滚动文件，承重数学的讲解/推导追加进去（`$...$`/`$$...$$`）。追加语义，`---` 分隔，带日期。不读不删旧内容除非用户明说。**第一条 entry 默认是「符号速查表」**（一次性表格化 paper 用到的所有数学符号 + 缩写，先建术语共识再讲内容）。
-- **`paper-card.md`**：每篇核心论文一张一屏的耐久笔记，模板见 `templates/paper-card.md`。脊椎、押错的 1%、批判要点、Connect 都落在这。card 是跨 session 积累的，别每次从零开始。
-- 放哪：默认跟着用户当前在读的论文目录走；用户没指定就问一次。
+| 文件 | 角色 | 写完后用户怎么用 |
+|---|---|---|
+| **`note.md`** | **事无巨细的 PDF → markdown 完整转写**(中文,faithful) | 这是用户**主要学习材料**,他打开 VSCode 预览读 note,不读 PDF |
+| **`qa.md`** | **默认只有 Q1 = 符号 / 公式 / 缩写对照表**,其他空 | 用户读 note 时 split-view 挂一边查符号;后续追问 Q2+ 才追加 |
+| **`paper-card.md`** | **学完之后查漏补缺的对照卡**(canonical 答案,1 屏内) | 用户读完 note 凭记忆复述,翻这张卡找漏点 |
+| `slides.pptx` | 12 页幻灯片(教/讲/汇报用) | 由 outline.json + render_slides.py 渲染,不手写 |
+
+### 三件套的 strict 边界(同一信息只在一个文件里出现)
+
+| 问题 | 答案该在哪 |
+|---|---|
+| Paper 的 Sec 3 第 4 段说了什么? | **note.md**(完整转写,跟随 paper 章节结构) |
+| 公式 (5) 里 $\alpha$ 是什么? | **qa.md** Q1 符号表 |
+| 这篇 paper 我读完后该记住哪 5 件事? | **paper-card.md** §2 必须掌握的 K 件事 |
+| 这篇的批判 / 我对它的评价? | **paper-card.md** §4 批判要点 |
+| 这篇怎么连接到我之前读的那批 paper? | **paper-card.md** §5 Connect |
+
+详细 schema(每个文件该长什么样):
+- `references/note_schema.md` —— note **完整转写**的约束
+- `references/qa_schema.md` —— qa.md 默认初始内容 + Q1 符号表格式
+- `references/paper-card_schema.md` —— paper-card 6 节结构 + 对照查漏的用法
+- `references/slide_schema.md` —— outline.json + 12-slide 默认模板
+
+**为什么三件分得这么开**:之前 v1.1 的 note/guide 想"既总结又转写又评价",一锅炖,反而 3 个目的全部模糊。v1.2 拆开 —— **note = faithful 转写,qa = 符号查询,paper-card = 自检对照** —— 各司其职,**用户的学习 loop 清楚**。
+
+放哪:默认跟着用户当前在读的论文目录走(`<CWD>/<slug>/`);用户没指定就问一次。
+
+### 关于 "guide.md"(v1.1 的概念,v1.2 已废)
+
+旧 SKILL 提到的 `guide.md`(稳定主讲稿,按"理解曲线"重排)**在 v1.2 不再生成**。它的角色被**note.md (完整转写) + paper-card.md (canonical 自检)**联合替代。
+- note.md 承担"详细内容",体量 >> 旧 guide
+- paper-card 承担"opinionated 提炼",体量 << 旧 guide
+- 旧 guide 那种"按理解曲线重排"在 v1.2 不该存在 —— 用户的目的是把 paper **完整内化**,不是先消化后看摘要;消化由用户自己做。
 
 ---
 
@@ -128,48 +157,71 @@ description: Use whenever the user wants to read / summarize / understand / crit
 
 读 `<CWD>/<slug>/main.tex`。**严格 ground 在文本里**:每个 claim 都能从 .tex 找到出处,不能编。
 
-**Step 4 — Write note.md**
+**Step 4 — Write note.md(事无巨细的完整转写)**
 
-按 `<SKILL_DIR>/references/note_schema.md` 的 schema 写,模板在 `<SKILL_DIR>/templates/note.template.md`。
+按 `<SKILL_DIR>/references/note_schema.md` 写,**最小骨架在** `<SKILL_DIR>/templates/note.template.md`。
 
 硬约束:
-- **中文主笔记 + Key Takeaways 强制中英双语**
-- Spine 段必须你自己的话,不许 abstract 直抄
-- Limitations 双拆(paper 自承 + 你看到的,带 🔴/🟠/🟡 严重度)
-- 5.3 (你期待 paper 有但没的对比)必填
+- **跟随 paper 自己的 section 顺序**,不重排,不"理解曲线"
+- **每一个公式 / 表格 / figure / footnote / algorithm / 实验细节都转写**,不省略
+- **中文为主**,关键术语第一次出现中英对照
+- **不要 agent 主观评价**(批判 / 总结 / 见解走 paper-card)
+- 长度通常 8k-25k 字符(中文),**不要担心 token**
 
-**Step 5 — Write outline.json**
+**Step 5 — Write qa.md(默认只有 Q1)**
+
+按 `<SKILL_DIR>/references/qa_schema.md` 写。
+
+硬约束:
+- 默认只一条 entry:**Q1 = 符号 / 公式 / 缩写对照表**
+- 按 A-E 五组分类(单步核心量 / 集合 / 概率符号 / 评估符号 / 缩写)
+- 符号表覆盖 note.md 里出现的所有公式符号
+- **不要 proactive 加 Q2+**(用户后续追问才加)
+
+**Step 6 — Write paper-card.md(canonical 自检卡)**
+
+按 `<SKILL_DIR>/references/paper-card_schema.md` 写,模板 `<SKILL_DIR>/templates/paper-card.md`。
+
+硬约束:
+- 6 节固定结构(脊椎 / K 件事 / 承重数学 / 批判要点 / Connect / 一句话裁决)
+- **整卡不超过 1 屏**(~80 行 markdown)
+- 必须 opinionated(脊椎不是 abstract 翻译,K 件事不是 paper 6 个 bullet 抄一遍)
+- Connect 仅 Core / Teach mode 填,Skim 跳过
+- **不复制 note.md 的内容**
+
+**Step 7 — Write outline.json + render slides**
 
 按 `<SKILL_DIR>/references/slide_schema.md`,**默认 11 个 content slide(加 title = 12)**。
 
-写之前:
-- `ls <CWD>/<slug>/figs/` 看有什么图可以引用
-- 至少 3 个 slide 配 figure
+- `ls <CWD>/<slug>/figs/` 看有什么图可以引用,至少 3 个 slide 配 figure
+- 执行:`uv run <SKILL_DIR>/scripts/render_slides.py <CWD>/<slug>/`
+- 输出 `<CWD>/<slug>/slides.pptx`(纯 .pptx,**永远不产 PDF**)
 
-**Step 6 — Render slides.pptx**
-
-执行:`uv run <SKILL_DIR>/scripts/render_slides.py <CWD>/<slug>/`
-
-输出 `<CWD>/<slug>/slides.pptx`(纯 .pptx,**永远不产 PDF**)。
-
-**Step 7 — Mark DONE + report**
+**Step 8 — Mark DONE + report**
 
 执行:`uv run <SKILL_DIR>/scripts/update_queue.py <CWD>/queue.md mark <slug> DONE`
 
-在 chat 给用户报:
-- ✓ slug
-- 笔记:`<paths>/note.md`
-- 幻灯片:`<paths>/slides.pptx`(12 页,VSCode 里 cmd+click 打开)
-- 一句话 highlight(从 note 的 takeaways 抽一句)
-- 推荐下一篇:queue.md 里下一个 TODO
+在 chat 给用户**简短** report(不要在 chat 里复述内容,内容已经在文件里):
+- ✓ `<slug>` 已读完
+- note(<字数>字)/ qa(Q1 已填,N 个符号)/ paper-card(6 节齐)/ slides(12 页)
+- self-check 清单结果:
+  - note: section / equation / table / figure 是否全覆盖 ✓
+  - qa Q1: 符号 + 缩写完整 ✓
+  - paper-card: 1 屏内 ✓
+- 推荐下一篇:queue.md 里下一个 TODO 的 slug
 
-### 模式映射
+### 模式映射(v1.2 重订)
 
-| Mode | 跑 Step 几 |
-|---|---|
-| **Skim** | 1, 3(只读不写 note), 在 chat 给三行裁决 + Step 2/7 标 DONE |
-| **Core** | 1, 2, 跑「先赌后验」流程 + 写 qa.md + paper-card.md, 不一定生成 slides |
-| **Teach** | **1-7 全跑** |
+| Mode | 跑 Step 几 | 产物 |
+|---|---|---|
+| **Skim** | 1, 2, 8 + 跳过 3-7 | 只在 chat 给三行裁决,**不写文件**;queue.md 标 SHELVED 或 DONE |
+| **Core** | 1-6, 8 + 跑「先赌后验」对话流程(在 chat) | note + qa(Q1 + 先赌后验过程中的 Q2+)+ paper-card(K 件事 + 押错的 1% 落 Sec 2)+ 不一定 slides |
+| **Teach** | **1-8 全跑** | note + qa(Q1)+ paper-card + slides |
+
+注:
+- Skim 跳过文件产物是因为旁支领域不值得花 token;直接给三行裁决在 chat 就够
+- Core 模式里,先赌后验**对话过程中**的 Q&A 追加到 qa.md(那时 Q2+ 才出现);押错点同时落 paper-card §2
+- Teach 模式是 default,新 paper 没说档位时默认走 Teach
 
 ### 决策点(开干前你要明确)
 

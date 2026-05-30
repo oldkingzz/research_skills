@@ -19,43 +19,57 @@ Claude 侧边栏（CLI / VSCode 插件）**不渲染 LaTeX**。所以：
 - 行内公式用 `$...$`，独立公式用 `$$...$$`。
 - 纯文字、不带公式的简短回答可以直接在聊天里说，不必动文件。
 
-## 文件契约：每篇 paper 一个文件夹，三件套
+## 文件契约：每篇 paper 一个文件夹，**三件套** + slides(v1.2)
 
-读一篇 paper 默认在它的目录下产出三个文件（旁支只 Skim 的可省 guide.md）：
+读一篇 paper 默认在它的目录下产出：
 
-| 文件 | 性质 | 用途 |
+| 文件 | 角色 | 用户怎么用 |
 |---|---|---|
-| `guide.md` | **稳定主讲稿**，一次写完后基本不动 | Teach mode 下的核心产物——我提取重点 + 教学，用户读这个不读原文 |
-| `qa.md` | **滚动追加的 Q&A 日志** | 用户问题 / 我的展开回答，公式都在这（`$...$` / `$$...$$`） |
-| `paper-card.md` | **耐久卡片**，跨 session 累积 | 脊椎、批判要点、Connect。模板见 `skills/read-paper/templates/paper-card.md` |
+| `note.md` | **事无巨细的 PDF → markdown 完整转写**（faithful，中文为主） | **主要学习材料**——他打开 VSCode 预览读 note，不读 PDF |
+| `qa.md` | **默认只有 Q1 = 符号 / 公式 / 缩写对照表**，其他空 | 读 note 时 split-view 挂一边查符号；后续追问 Q2+ 才追加 |
+| `paper-card.md` | **学完之后查漏补缺的对照卡**（canonical 1 屏） | 读完 note 凭记忆复述，翻这张卡找漏点 |
+| `slides.pptx` | 12 页幻灯片 | 教 / 讲 / 汇报时用 |
 
-### qa.md 的写入方式（默认：追加）
+**v1.1 的 `guide.md` 在 v1.2 已废**——它的"主讲稿"角色拆给了 note(完整内容) + paper-card(opinionated 提炼)。
 
-`qa.md` 是一个**滚动累积**的工作文件，不是每次覆盖。每次回答**追加**一个新段落块：
+### 三件分得这么开的原因
+
+| 问题 | 答案在哪 |
+|---|---|
+| paper 第 X 节第 Y 段说了什么？ | **note.md**（完整转写，跟随 paper 章节结构） |
+| 公式里 $\alpha$ 是什么意思？ | **qa.md** Q1 符号表 |
+| 读完该掌握的 K 件事？ | **paper-card.md** §2 |
+| 这篇最该被批判的点？ | **paper-card.md** §4 |
+| 怎么连接到我之前读的 paper？ | **paper-card.md** §5 Connect |
+
+详细 schema：见 `skills/read-paper/references/note_schema.md` / `qa_schema.md` / `paper-card_schema.md`。
+
+### qa.md 默认就 Q1，后续 Q2+ 才追加（v1.2 重订）
+
+之前 v1.1 把 qa.md 当滚动 Q&A 日志，**第一条 entry 默认是符号速查表**。
+v1.2 收窄：**默认就只有这一条**，其他都不写。用户后续在 chat 里追问时,answer 才作为 Q2+ 追加。
+
+格式：
 
 ```markdown
 ---
 
-## <用户的问题 / 主题>   <!-- 简短标题 -->
+## Q<n> — <用户问题的简短标题>
 <!-- YYYY-MM-DD -->
 
 <回答正文：公式用 $...$ / $$...$$，可以有推导、图示、要点 -->
 ```
 
-- 用 `---` 分隔每次问答，方便在预览里滚动。
-- 既是"问答记录"，也是"教学页"——该展开讲透就展开，公式该写就写。
-- **写之前不读不删旧内容**（追加语义），除非用户明确说"重写这段 / 清空"。
-
-### qa.md 的第一条 entry 默认是「符号速查表」
-
-实际跑下来，**进任何内容前先把这篇 paper 用到的所有数学符号一次性表格化**是个非常稳的开头。包括：单步核心量（$o, a, l, o'$ 之类）、空间集合（$O, A, L$）、概率符号（$p, \mathcal{D}, \sim, \mathbb{E}$）、loss 项、各种 metric 里的符号、常用缩写。**先建术语共识，再讲内容**。
+- 用 `---` 分隔每次问答。
+- **追加语义**——写之前不读不删旧内容，除非用户明说"重写这段 / 清空"。
+- **agent 不 proactive 加 Q2+**，只在用户追问时加。
 
 ---
 
 ## 子技能
 
-### `skills/read-paper/` — 读论文方法论（v1，自建，用户会迭代）
-**三档模式**：Skim（旁支三行裁决）/ Core（核心领域「先赌后验」深读）/ Teach（讲解模式——Claude 出主讲稿，用户不读原文，问题进 qa.md）。承重数学进 qa.md，每篇核心论文产出一张 paper card。内含 `references/critique-rubric.md`（批判 rubric）和 `templates/paper-card.md`。**每个 session 开头用户会给至少一篇论文链接，先定档。**
+### `skills/read-paper/` — 读论文方法论（v1.2，自建，用户会迭代）
+**三档模式**：Skim（旁支三行裁决，**不写文件**）/ Core（核心领域「先赌后验」深读，对话进 qa，押错落 paper-card）/ Teach（默认；agent 出 note + qa Q1 + paper-card + slides，用户读 note 不读原文，自检靠 paper-card）。**承重数学进 note.md（在原文章节里）；符号查询表进 qa.md（Q1）；opinionated 评价进 paper-card.md**。内含 `references/{note_schema,qa_schema,paper-card_schema,slide_schema,critique-rubric,output_layout}.md` 和 `templates/`。**每个 session 开头用户会给至少一篇论文链接，先定档。**
 
 ### `skills/ml-paper-writing/` — 写论文（整包搬自 Orchestra，原样）
 覆盖全英文论文写作全流程 + 各会议 LaTeX 模板。对本用户最关键的是 `references/writing-guide.md`（专治口语化：Gopen & Swan / Perez / Lipton / Steinhardt 的规范化改写）。

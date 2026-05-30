@@ -72,14 +72,31 @@ The skill is **domain-agnostic** — it works for any arxiv paper, not just ML /
 robotics. The `description` field includes those trigger phrases up front so
 auto-matching works across Claude Code / Codex CLI / Cursor without ceremony.
 
-## What the agent does once triggered
+## What the agent does once triggered (v1.2 — three-artifact pipeline)
 
 1. `uv run skills/read-paper/scripts/ingest.py <arxiv-id> --out-dir <CWD>`
+   — downloads arxiv LaTeX source, flattens `\input{}`, extracts figures
 2. `uv run skills/read-paper/scripts/update_queue.py <CWD>/queue.md add <slug> "<title>" <id>`
-3. Agent reads `<slug>/main.tex` and writes `<slug>/note.md` per `references/note_schema.md`
-4. Agent writes `<slug>/outline.json` per `references/slide_schema.md`
-5. `uv run skills/read-paper/scripts/render_slides.py <CWD>/<slug>/`
-6. `uv run skills/read-paper/scripts/update_queue.py <CWD>/queue.md mark <slug> DONE`
+   `uv run skills/read-paper/scripts/update_queue.py <CWD>/queue.md mark <slug> READING`
+3. Agent reads `<slug>/main.tex` end-to-end
+4. Agent writes `<slug>/note.md` per `references/note_schema.md`
+   — **exhaustive faithful PDF → markdown transcription**, follows paper's own
+   section order, no compression, no agent opinions (those go in paper-card)
+5. Agent writes `<slug>/qa.md` per `references/qa_schema.md`
+   — **default content is just Q1 = symbol / formula / abbreviation table**;
+   no Q2+ yet (those are added later when user asks follow-ups)
+6. Agent writes `<slug>/paper-card.md` per `references/paper-card_schema.md`
+   — **canonical 1-screen self-check card** (spine, K must-know items, key
+   math, critique, Connect, verdict); user uses this AFTER reading note to
+   find gaps
+7. Agent writes `<slug>/outline.json` per `references/slide_schema.md`,
+   then `uv run skills/read-paper/scripts/render_slides.py <CWD>/<slug>/`
+8. `uv run skills/read-paper/scripts/update_queue.py <CWD>/queue.md mark <slug> DONE`
+
+The three artifacts have **strict role boundaries** (no content duplication):
+- note.md = what the paper says (faithful)
+- qa.md = symbol lookup (just Q1 by default)
+- paper-card.md = canonical opinionated takeaways for post-study self-check
 
 ## Iteration policy
 

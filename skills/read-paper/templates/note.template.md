@@ -11,101 +11,48 @@ mode: "Teach"
 tags: []
 ---
 
-# <一句话标题:这篇到底干了什么>
+<!--
+这是 note.md 的**最小骨架**(只有 frontmatter + 一节 0)。
 
-## 0. TL;DR
+note 的正文章节**镜像 paper 自己的 section 划分**,**不用固定模板**。
+所以这个 file 只给 metadata + 第 0 节(元信息)的骨架,
+paper 有几节就在 0 之后加几节(1, 2, 3, ...),完整 faithful 转写。
 
-- 核心 claim 一句话:
-- 它新的是什么(component 层面):
-- 它借的是什么:
-- 精度 / 延迟 / 数据效率定位:
-- 一句话裁决:
+详细写作规则见 references/note_schema.md
+-->
 
-## 1. 研究问题 (Research Question)
+# <paper 完整原标题(中文翻译可放副标题)>
 
-...
+## 0. 元信息
 
-## 2. 任务定义 (Task Definition)
+### Abstract(中英对照)
 
-- benchmark + 任务数:
-- input / output:
-- 评测指标:
+> **EN (原文)**:
+> ...
+>
+> **CN (翻译)**:
+> ...
 
-## 3. 关键 idea (Spine)
-
-...
-
-## 4. 方法 (Method)
-
-### 4.1 整体架构
-
-```
-...
-```
-
-### 4.2 承重组件
-
-- **组件 A**:
-  - 干什么:
-  - 新还是旧:
-  - 去掉会坏什么:
-
-### 4.3 承重数学
-
-$$
-\mathcal{L} = ...
-$$
-
-| 超参 | 默认值 | 含义 |
-|---|---|---|
-
-## 5. 实验 (Experiments)
-
-### 5.1 关键数字
-
-| Method | bench 1 | bench 2 | mean |
-|---|---|---|---|
-
-### 5.2 重要 ablation
-
-...
-
-### 5.3 我期待但 paper 没做的对比
-
-- ...
-- ⚠️ promised but not in paper:
-
-## 6. Limitations
-
-### Paper 自承
+### Keywords / Area
 - ...
 
-### 我看到的
-- 🔴 ...
-- 🟠 ...
-- 🟡 ...
-
-## 7. 在版图里的位置 (Connect)
-
-- 相对我已知的 ___,这篇是 [补充 / 矛盾 / 推进] 了 ___
-- 它改变了我对 ___ 的判断:___
-- 它打开的下一个问题:___
-
-## 8. Key Takeaways(中英双语,强制)
-
-- **CN**: 
-  - **EN**: 
-
-- **CN**: 
-  - **EN**: 
-
-- **CN**: 
-  - **EN**: 
-
-## 9. 我押错的 1%
-
-- ⚠️ 我原以为 ___,其实 ___。
-
-## 10. Open Questions
-
+### 我的 tags
 - ...
+
+---
+
+<!--
+下面按 paper 的 section 顺序逐节转写,完整 faithful。
+每个 section / subsection 都不能跳。
+所有公式 / 表格 / figure / footnote / algorithm box 都要在 note 里出现。
+
+参见 references/note_schema.md 的「每节内的转写原则」。
+-->
+
+## 1. <paper Section 1 标题>
+
+...
+
+## 2. <paper Section 2 标题>
+
+...
