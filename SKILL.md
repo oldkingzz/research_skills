@@ -19,18 +19,19 @@ Claude 侧边栏（CLI / VSCode 插件）**不渲染 LaTeX**。所以：
 - 行内公式用 `$...$`，独立公式用 `$$...$$`。
 - 纯文字、不带公式的简短回答可以直接在聊天里说，不必动文件。
 
-## 文件契约：每篇 paper 一个文件夹，**三件套** + slides(v1.2)
+## 文件契约：每篇 paper 一个文件夹，**三件套**(v1.3：slides 按需,无 Connect)
 
-读一篇 paper 默认在它的目录下产出：
+读一篇 paper 默认在它的目录下产出**三件套**：
 
 | 文件 | 角色 | 用户怎么用 |
 |---|---|---|
 | `note.md` | **事无巨细的 PDF → markdown 完整转写**（faithful，中文为主） | **主要学习材料**——他打开 VSCode 预览读 note，不读 PDF |
 | `qa.md` | **默认只有 Q1 = 符号 / 公式 / 缩写对照表**，其他空 | 读 note 时 split-view 挂一边查符号；后续追问 Q2+ 才追加 |
-| `paper-card.md` | **学完之后查漏补缺的对照卡**（canonical 1 屏） | 读完 note 凭记忆复述，翻这张卡找漏点 |
-| `slides.pptx` | 12 页幻灯片 | 教 / 讲 / 汇报时用 |
+| `paper-card.md` | **学完之后查漏补缺的对照卡**（canonical 1 屏，5 节） | 读完 note 凭记忆复述，翻这张卡找漏点 |
+| `slides.pptx` | 12 页幻灯片 | **默认不产**；用户明确要求 "要 slides / 出幻灯片" 时才生成 |
 
 **v1.1 的 `guide.md` 在 v1.2 已废**——它的"主讲稿"角色拆给了 note(完整内容) + paper-card(opinionated 提炼)。
+**v1.3 在 v1.2 基础上**：移除 paper-card §5 Connect 段；slides 从默认产物挪到按需产物。
 
 ### 三件分得这么开的原因
 
@@ -40,7 +41,7 @@ Claude 侧边栏（CLI / VSCode 插件）**不渲染 LaTeX**。所以：
 | 公式里 $\alpha$ 是什么意思？ | **qa.md** Q1 符号表 |
 | 读完该掌握的 K 件事？ | **paper-card.md** §2 |
 | 这篇最该被批判的点？ | **paper-card.md** §4 |
-| 怎么连接到我之前读的 paper？ | **paper-card.md** §5 Connect |
+| 这篇跟我之前读的 X paper 怎么 connect？ | **不主动写**(v1.3 移除)；用户问才答,进 qa.md 作 Q&A |
 
 详细 schema：见 `skills/read-paper/references/note_schema.md` / `qa_schema.md` / `paper-card_schema.md`。
 
@@ -68,8 +69,8 @@ v1.2 收窄：**默认就只有这一条**，其他都不写。用户后续在 c
 
 ## 子技能
 
-### `skills/read-paper/` — 读论文方法论（v1.2，自建，用户会迭代）
-**三档模式**：Skim（旁支三行裁决，**不写文件**）/ Core（核心领域「先赌后验」深读，对话进 qa，押错落 paper-card）/ Teach（默认；agent 出 note + qa Q1 + paper-card + slides，用户读 note 不读原文，自检靠 paper-card）。**承重数学进 note.md（在原文章节里）；符号查询表进 qa.md（Q1）；opinionated 评价进 paper-card.md**。内含 `references/{note_schema,qa_schema,paper-card_schema,slide_schema,critique-rubric,output_layout}.md` 和 `templates/`。**每个 session 开头用户会给至少一篇论文链接，先定档。**
+### `skills/read-paper/` — 读论文方法论（v1.3，自建，用户会迭代）
+**三档模式**：Skim（旁支三行裁决，**不写文件**）/ Core（核心领域「先赌后验」深读，对话进 qa，押错落 paper-card）/ Teach（默认；agent 出 note + qa Q1 + paper-card，用户读 note 不读原文，自检靠 paper-card）。**承重数学进 note.md（在原文章节里）；符号查询表进 qa.md（Q1）；opinionated 评价进 paper-card.md（5 节，无 Connect）**。**Slides 默认不产**，用户明示要才跑。内含 `references/{note_schema,qa_schema,paper-card_schema,slide_schema,critique-rubric,output_layout}.md` 和 `templates/`。**每个 session 开头用户会给至少一篇论文链接，先定档。**
 
 ### `skills/ml-paper-writing/` — 写论文（整包搬自 Orchestra，原样）
 覆盖全英文论文写作全流程 + 各会议 LaTeX 模板。对本用户最关键的是 `references/writing-guide.md`（专治口语化：Gopen & Swan / Perez / Lipton / Steinhardt 的规范化改写）。

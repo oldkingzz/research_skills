@@ -99,7 +99,7 @@ note.md 已经事无巨细 (完整转写 paper);paper-card.md 已经有 spine / 
 
 - **paper 内容的总结 / 复述** —— 那是 note.md 的事
 - **批判 / 评价** —— 那是 paper-card 的事
-- **跨 paper connect** —— paper-card
+- **跨 paper connect** —— **v1.3 不主动做**;用户在 chat 主动问时,答案才进 qa.md 作 Q&A entry
 - **用户没问的"为你而设的提示"** —— 不要 proactive 加 Q2
 
 ## 写完 self-check

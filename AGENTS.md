@@ -72,7 +72,7 @@ The skill is **domain-agnostic** — it works for any arxiv paper, not just ML /
 robotics. The `description` field includes those trigger phrases up front so
 auto-matching works across Claude Code / Codex CLI / Cursor without ceremony.
 
-## What the agent does once triggered (v1.2 — three-artifact pipeline)
+## What the agent does once triggered (v1.3 — three-artifact pipeline, slides on demand)
 
 1. `uv run skills/read-paper/scripts/ingest.py <arxiv-id> --out-dir <CWD>`
    — downloads arxiv LaTeX source, flattens `\input{}`, extracts figures
@@ -86,12 +86,15 @@ auto-matching works across Claude Code / Codex CLI / Cursor without ceremony.
    — **default content is just Q1 = symbol / formula / abbreviation table**;
    no Q2+ yet (those are added later when user asks follow-ups)
 6. Agent writes `<slug>/paper-card.md` per `references/paper-card_schema.md`
-   — **canonical 1-screen self-check card** (spine, K must-know items, key
-   math, critique, Connect, verdict); user uses this AFTER reading note to
-   find gaps
-7. Agent writes `<slug>/outline.json` per `references/slide_schema.md`,
-   then `uv run skills/read-paper/scripts/render_slides.py <CWD>/<slug>/`
-8. `uv run skills/read-paper/scripts/update_queue.py <CWD>/queue.md mark <slug> DONE`
+   — **canonical 1-screen self-check card, 5 sections** (spine, K must-know
+   items, key math, critique, verdict); user uses this AFTER reading note to
+   find gaps. **No "Connect to other papers" section** (v1.3 removed) —
+   cross-paper connect is the user's cognitive work, not the agent's
+7. `uv run skills/read-paper/scripts/update_queue.py <CWD>/queue.md mark <slug> DONE`
+8. (**on demand only**) If user explicitly asks for slides, write
+   `<slug>/outline.json` per `references/slide_schema.md` then run
+   `uv run skills/read-paper/scripts/render_slides.py <CWD>/<slug>/` →
+   `<slug>/slides.pptx`. Slides are NOT in the default pipeline.
 
 The three artifacts have **strict role boundaries** (no content duplication):
 - note.md = what the paper says (faithful)

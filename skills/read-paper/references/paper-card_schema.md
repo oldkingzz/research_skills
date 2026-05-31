@@ -11,15 +11,15 @@
 ## 设计原则
 
 - **canonical**:写的是"读完这篇 paper 应该掌握的最核心 X 条",不是 paper 内容的 mirror
-- **opinionated**:可以有 agent 的判断(spine 是什么 / 哪里最该被批判 / 跟用户已知领域怎么 connect)
+- **opinionated**:可以有 agent 的判断(spine 是什么 / 哪里最该被批判 / 一句话裁决要不要深挖)
 - **可对照**:用户读完 note 后,翻到 paper-card,**一项一项问自己"这条我想到了吗 / 这条的细节我能复述吗"**,没想到 / 复述不清 = 漏了,回 note 补
-- **跨 paper 累积**:paper-card 是用户长期手边的卡片集,跨 session 累积,paper-card 的 "Connect" 章节是他领域版图
+- **跨 paper 不主动 connect**(v1.3):paper-card 只对单篇 paper 负责,**跨 paper 关联是用户自己的认知工作**,agent 不替他做。用户主动问 "这跟 X paper 怎么 connect" 时,答案进 qa.md 作 Q&A,不回头改 paper-card
 
 ## 文件位置
 
 `<paper-dir>/paper-card.md`,跟 `note.md` / `qa.md` 同级。
 
-## 必填结构 —— **6 个章节,固定顺序**
+## 必填结构 —— **5 个章节,固定顺序**(v1.3:去掉 Connect)
 
 ```markdown
 # <一句话标题:这篇到底干了什么>
@@ -60,27 +60,27 @@
 - 🟠 隐藏假设:___
 - 🟡 ablation 缺了 ___
 
-## 5. Connect(放进版图)
-
-<只在用户的核心领域 paper 上填(Core / Teach mode);旁支 paper 可省。
-跟用户已读的 paper / 已知的方向连起来。跨 paper 累积。>
-
-- 相对我已知的 ___,这篇是 [补充 / 矛盾 / 推进] 了 ___
-- 它改变了我对 ___ 的判断:___
-- 它打开的下一个问题:___
-
-## 6. 一句话裁决
+## 5. 一句话裁决
 
 <两个维度:值不值得我接着深挖 / 在我工作里用得上吗。1-2 句。>
 ```
+
+### 关于"Connect 跨 paper 关联" —— **v1.3 显式去掉**
+
+之前 v1.2 有 §5 Connect 段(让 agent 把当前 paper 跟用户已读的 paper / 已知方向连起来)。**v1.3 显式移除**,因为:
+- **跨 paper connect 是用户的认知工作**,agent 替他做反而会 inject agent 的判断而不是用户的 mental map
+- 不同用户 mental map 不同;agent 假设 "用户读过 X paper" 会出错
+- 特别地:**不要默认 connect 到任何用户在职公司的 paper**(SaiVLA / Synthoid 等)。用户自己 connect 即可,agent 不主动做
+
+如果用户后续在 chat 里**主动**问 "这跟 X paper 怎么 connect",那是 Q&A,答案进 qa.md 作为追加 entry,**不进 paper-card**。
 
 ## 写作硬约定
 
 1. **不要超过 1 屏 markdown**:paper-card 是查漏卡,不是 mini-note。如果 5 条 K 件事写到第 8 条,删
 2. **必须有 agent 自己的判断**:脊椎不是 abstract 翻译,K 件事不是 paper 6 个 contribution bullet 抄一遍,批判要有自己的视角
 3. **公式只列承重的**:不超过 5 条。其他公式在 note 里
-4. **Connect 仅 Core/Teach 模式填**:Skim 模式跳过这一节(留空 + 注释 "Skim mode 跳过")
-5. **不复制 note.md 的内容**:任何想说"详见 note Sec X"的地方就这么写,不重复
+4. **不复制 note.md 的内容**:任何想说"详见 note Sec X"的地方就这么写,不重复
+5. **不做跨 paper connect**(v1.3):见上面"Connect 段移除"理由
 
 ## 跟 note.md / qa.md 的角色边界
 
@@ -91,7 +91,7 @@
 | 这篇的 spine 是什么? | **paper-card** Sec 1 |
 | 这篇 paper 我读完后该记住哪 5 件事? | **paper-card** Sec 2 |
 | 这篇的批判点是什么? | **paper-card** Sec 4 |
-| 这篇怎么连接到我之前读的那批 paper? | **paper-card** Sec 5 |
+| 这篇跟我之前读的 X paper 怎么 connect? | **不主动写**;用户问才答,进 qa.md 作 Q&A |
 
 ## 写完 self-check
 
@@ -100,3 +100,4 @@
 - [ ] 批判至少 3 条(🔴/🟠/🟡 至少各 1 条 ideally)
 - [ ] 整个 card 不超过 1 屏(~80 行 markdown)
 - [ ] 没有大段抄 note 的内容
+- [ ] **没有跨 paper connect 段**(v1.3 移除)

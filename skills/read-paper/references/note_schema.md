@@ -93,7 +93,7 @@ note 的章节**镜像 paper 的 section 划分**,不是固定模板。例如 pa
 - **你给用户的"建议"或"提问"** —— note 是 paper 本身的转写,不是讲解材料
 - **公式的"直观解释"或"举例"** —— 除非 paper 原文里有,否则不加(你额外的解释会污染 faithful 性)
 - **"为什么这样设计"的推测** —— paper 自己讲就转写,paper 没讲就不要补
-- **跨 paper 的 connect** —— 这是 `paper-card.md` 的事
+- **跨 paper 的 connect** —— **v1.3 不主动做**(无论 note 还是 paper-card);用户主动问就 qa.md 答
 
 ## 长度预期
 
