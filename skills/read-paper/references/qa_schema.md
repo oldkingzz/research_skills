@@ -1,5 +1,8 @@
 # qa.md schema —— **默认只有 Q1 = 符号对照表,其他空**
 
+> **v1.6(2026-09-04)适用范围**:不再生成独立 qa.md。Q1 符号表的 A–E 分组与硬约定 → `note.html` **符号表 tab**(不占 Q 号);Q2+ 的"完整度 ≥ chat"硬规矩保留,但 Q 块插在 note.html 对应节末尾,规则见 `note_schema_v2.md` §3。
+
+
 > 三件套里**最瘦**的一件,**也是结构最稳的一件**。
 
 ## 核心约定
@@ -11,15 +14,15 @@
 
 ## 为什么这样设计
 
-note.md 已经事无巨细 (完整转写 paper);paper-card.md 已经有 spine / takeaway / 批判 (查漏补缺);**qa.md 不再需要承担"滚动 Q&A 日志"的全部功能**。
+note.html 已经事无巨细 (完整转写 paper);paper-card.md 已经有 spine / takeaway / 批判 (查漏补缺);**qa.md 不再需要承担"滚动 Q&A 日志"的全部功能**。
 
-但用户读 note.md 时,**对照符号定义**是高频操作 —— 公式里冒出来一个 $\mathbf{H}_B^{(l)}$,需要立即查它是什么。**符号表是用户在 VSCode 里 split-view 的第二个窗口**:左边 note,右边 qa。
+但用户读 note.html 时,**对照符号定义**是高频操作 —— 公式里冒出来一个 $\mathbf{H}_B^{(l)}$,需要立即查它是什么。**符号表是用户在 VSCode 里 split-view 的第二个窗口**:左边 note,右边 qa。
 
 所以 qa.md = **可被 split-view 长期挂在屏幕一边的符号查询表**,不是 chat log。
 
 ## 文件位置
 
-`<paper-dir>/qa.md`,跟 note.md / paper-card.md 同级。
+`<paper-dir>/qa.md`,跟 note.html / paper-card.md 同级。
 
 ## 默认初始内容(agent 在 read 流程里生成)
 
@@ -30,7 +33,7 @@ note.md 已经事无巨细 (完整转写 paper);paper-card.md 已经有 spine / 
 >
 > **使用方式**:在 VSCode 里打开,`Cmd+K V` 开 Markdown 预览(侧边窗渲染 LaTeX 公式)。
 >
-> 配合 [note.md](note.md) 用 —— note 讲故事,qa 查符号。
+> 配合 [note.html](note.html) 用 —— note 讲故事,qa 查符号。
 >
 > 后续追问由用户在 chat 里发起,agent 把答案追加到本文件,用 `---` 分隔。
 
@@ -76,7 +79,7 @@ note.md 已经事无巨细 (完整转写 paper);paper-card.md 已经有 spine / 
 
 ## Q1 写作硬约定
 
-1. **覆盖完整**:paper 用到的所有 distinct 符号都进表(看 note.md 的公式部分,把出现过的都收)
+1. **覆盖完整**:paper 用到的所有 distinct 符号都进表(看 note.html 的公式部分,把出现过的都收)
 2. **分组**:按上面 A-E 分类,**别全堆一起**
 3. **含义中文为主**,但**核心词 + 关键定义 不要漏英文术语**(`p` = 概率 probability)
 4. **出现位置 column 选填**:能定位到 paper 里第一次定义/使用的 Section / Equation 编号就填,不能就空
@@ -84,7 +87,7 @@ note.md 已经事无巨细 (完整转写 paper);paper-card.md 已经有 spine / 
 
 ## 后续追加(Q2+)
 
-用户在 chat 里追问时,agent 把答案追加到 qa.md 末尾,格式:
+用户在 chat 里追问时,agent 把答案追加到 qa.md 末尾。**硬规矩(v1.4,2026-08-31 用户明确要求):qa.md 里的 Q2+ 必须是完整版,详细度 ≥ chat 里的回复——含全部例子、推导、表格、类比。** chat 会滚走,qa.md 才是留档;要压缩的话压缩 chat 回复,不许压缩 qa entry。格式:
 
 ```markdown
 ---
@@ -97,13 +100,13 @@ note.md 已经事无巨细 (完整转写 paper);paper-card.md 已经有 spine / 
 
 ## 不该出现在 qa.md 里的东西
 
-- **paper 内容的总结 / 复述** —— 那是 note.md 的事
+- **paper 内容的总结 / 复述** —— 那是 note.html 的事
 - **批判 / 评价** —— 那是 paper-card 的事
 - **跨 paper connect** —— **v1.3 不主动做**;用户在 chat 主动问时,答案才进 qa.md 作 Q&A entry
 - **用户没问的"为你而设的提示"** —— 不要 proactive 加 Q2
 
 ## 写完 self-check
 
-- [ ] note.md 里出现的所有公式符号,qa.md Q1 里都有定义
+- [ ] note.html 里出现的所有公式符号,qa.md Q1 里都有定义
 - [ ] 缩写表至少 5 条(每篇 paper 至少 5 个缩写,通常更多)
 - [ ] Q1 之后没有任何额外 entry(除非用户已问过)

@@ -12,16 +12,14 @@
 
 ```
 <paper-slug>/                          # 由 ingest.py 自动建,见下面 slug 规则
-├── metadata.json                       # arxiv_id / slug / title / authors / url / ingested
+├── metadata.json                       # arxiv_id / slug / title / authors / main_authors / institutions / venue / url / ingested
 ├── main.tex                            # 扁平化后的 LaTeX 全文(\input{} 已解开)
 ├── source/                             # arxiv 原始 e-print tarball 解压结果
-│   └── *.tex, *.bbl, *.sty, *.cls, ...
 ├── figs/                               # 所有图(.png/.jpg,以及 pdf-figs 已转 png 200dpi)
-├── note.md                             # 主笔记,schema 见 note_schema.md
-├── outline.json                        # slide 脚本输入,schema 见 slide_schema.md
-├── slides.pptx                         # 渲染好的 deck (12 页默认)
-├── qa.md                               # 滚动 Q&A(可选,只在 Teach mode 用)
-└── paper-card.md                       # 耐久卡(可选,只在 Core / Teach mode 用)
+├── note.html                           # v1.6 唯一用户可读文件:一屏卡 + Q 索引 + 讲义/原文/夯实/符号表 四 tab(note_schema_v2.md)
+├── outline.json                        # (按需)slide 脚本输入
+└── slides.pptx                         # (按需)渲染好的 deck
+# v1.5 及以前的 qa.md / paper-card.md / lesson.html / drill.html 不再生成;旧论文里已有的保留不删
 ```
 
 ## 3. slug 规则

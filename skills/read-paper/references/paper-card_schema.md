@@ -1,10 +1,13 @@
 # paper-card.md schema —— **学完之后查漏补缺的对照卡**
 
+> **v1.6(2026-09-04)适用范围**:不再生成独立 paper-card.md。§1 脊椎、§4 批判(改叫"边界")、§5 裁决 → `note.html` **一屏卡左栏**;§2 K 件事、§3 承重数学 → **夯实 tab 提取卡的答案面**。"1 屏内"约束仍适用于一屏卡。右栏由用户自己写,agent 不碰。
+
+
 > 三件套里**最薄**的一件,但**密度最高、最值钱**。
 
 ## 核心约定
 
-`paper-card.md` 不是 paper 内容的摘要,**是用户读完 `note.md` 之后,合上 PDF + 合上 note,凭记忆复述时,用来对照自己漏了什么的"答案卡"**。
+`paper-card.md` 不是 paper 内容的摘要,**是用户读完 `note.html` 之后,合上 PDF + 合上 note,凭记忆复述时,用来对照自己漏了什么的"答案卡"**。
 
 **类比**:期末考试的时候,你做完模拟题再对照标准答案找漏点 —— paper-card 就是那张标准答案。
 
@@ -17,7 +20,7 @@
 
 ## 文件位置
 
-`<paper-dir>/paper-card.md`,跟 `note.md` / `qa.md` 同级。
+`<paper-dir>/paper-card.md`,跟 `note.html` / `qa.md` 同级。
 
 ## 必填结构 —— **5 个章节,固定顺序**(v1.3:去掉 Connect)
 
@@ -45,7 +48,7 @@
 
 <只列**承重**公式 —— 删了它论文死的那几个。
 每条:公式 + "它是干嘛的" + "去掉/改了会坏什么"。
-**详细推导不在这,在 note.md 对应章节**。>
+**详细推导不在这,在 note.html 对应章节**。>
 
 - $\mathcal{L} = ...$ —— 作用:___;改/删后果:___
 - ...
@@ -79,14 +82,14 @@
 1. **不要超过 1 屏 markdown**:paper-card 是查漏卡,不是 mini-note。如果 5 条 K 件事写到第 8 条,删
 2. **必须有 agent 自己的判断**:脊椎不是 abstract 翻译,K 件事不是 paper 6 个 contribution bullet 抄一遍,批判要有自己的视角
 3. **公式只列承重的**:不超过 5 条。其他公式在 note 里
-4. **不复制 note.md 的内容**:任何想说"详见 note Sec X"的地方就这么写,不重复
+4. **不复制 note.html 的内容**:任何想说"详见 note Sec X"的地方就这么写,不重复
 5. **不做跨 paper connect**(v1.3):见上面"Connect 段移除"理由
 
-## 跟 note.md / qa.md 的角色边界
+## 跟 note.html / qa.md 的角色边界
 
 | 问题 | 答案该在哪 |
 |---|---|
-| Paper 的 Sec 3 第 4 段说了什么? | **note.md**(完整转写) |
+| Paper 的 Sec 3 第 4 段说了什么? | **note.html**(完整转写) |
 | 公式 (5) 里 $\alpha$ 是什么? | **qa.md**(符号表) |
 | 这篇的 spine 是什么? | **paper-card** Sec 1 |
 | 这篇 paper 我读完后该记住哪 5 件事? | **paper-card** Sec 2 |

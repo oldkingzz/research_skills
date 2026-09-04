@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{SHORT_TITLE}}</title>
+<!--
+  note_v2.html 骨架(read-paper v1.6,2026-09-04)
+  ─────────────────────────────────────────────
+  一篇 paper 只有这一个用户可读文件。结构:
+    ① 一屏卡(两栏:左 agent 参考版 / 右 用户自己写的版本,右栏存 localStorage)
+    ② Q 索引(JS 自动从页内所有 .qa 块生成,agent 不用手维护)
+    ③ 四个标签页:讲义 / 原文对照 / 夯实 / 符号表
+  agent 编辑规则:
+    - 追加 Q:找到目标节末尾的 Q-INSERT 标记(形如「Q-INSERT: l3」的 HTML 注释),在标记之前插入一个 .qa 块;
+      编号 = 页内现有最大 Q 号 + 1(全局递增,与位置无关);写完重读文件核对 Q 号唯一。
+    - 不要动标记本身;不要在标记以外的位置插 Q。
+    - {{...}} 是占位符,生成时全部替换;说明性注释可保留。
+    - 注释里不要再嵌套写 HTML 注释(会提前闭合)。
+  KaTeX 注意:不支持 \textsc;用 \mathrm。SVG <text> 里不要写 $...$。
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+  :root{
+    --ink:#1a1d23; --sub:#5a6270; --line:#e3e6eb; --bg:#fbfbfc; --panel:#fff;
+    --acc:#0f62fe; --acc-soft:#eef4ff;
+    --ex:#0e6027; --ex-soft:#e9f6ec;
+    --dv:#8a3ffc; --dv-soft:#f6f0ff;
+    --ask:#8a6a00; --ask-soft:#fff8e1;
+    --back:#00539a; --back-soft:#e8f1fa;
+    --warn:#a2191f; --warn-soft:#ffefef;
+    --mono:"SF Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.85 -apple-system,"PingFang SC","Hiragino Sans GB",sans-serif}
+  main{min-width:0}
+  .wrap{display:grid;grid-template-columns:225px 1fr;max-width:1200px;margin:0 auto;gap:28px;padding:24px 30px 120px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr;padding:16px 14px 80px}.toc{display:none}}
+  .toc{position:sticky;top:20px;align-self:start;font-size:12.5px;border-right:1px solid var(--line);padding-right:14px;max-height:92vh;overflow-y:auto}
+  .toc a{display:block;color:var(--sub);text-decoration:none;padding:3px 0 3px 8px}
+  .toc a:hover{color:var(--acc)}
+  .toc .t{font-weight:700;color:var(--ink);margin:10px 0 6px}
+  .toc .grp{display:none}.toc .grp.on{display:block}
+  h1{font-size:24px;margin:0 0 6px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--sub);max-width:100%}
+  .chip b{color:var(--ink)}
+  h2{font-size:19px;margin:44px 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lb{background:var(--acc);color:#fff;font-weight:800;border-radius:8px;padding:2px 13px;font-size:14px;white-space:nowrap}
+  h3{font-size:15.5px;margin:24px 0 8px}
+  p{margin:9px 0}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0}
+  .exbox{background:var(--ex-soft);border-left:4px solid var(--ex);border-radius:6px;padding:11px 15px;margin:14px 0}
+  .exbox .lbl{font-weight:800;color:var(--ex);font-size:12.5px;letter-spacing:.5px}
+  .dvbox{background:var(--dv-soft);border-left:4px solid var(--dv);border-radius:6px;padding:11px 15px;margin:14px 0}
+  .dvbox .lbl{font-weight:800;color:var(--dv);font-size:12.5px;letter-spacing:.5px}
+  .dvbox ol{margin:6px 0;padding-left:22px}.dvbox li{margin:7px 0}
+  .askbox{background:var(--ask-soft);border-left:4px solid var(--ask);border-radius:6px;padding:11px 15px;margin:14px 0}
+  .askbox .lbl{font-weight:800;color:var(--ask);font-size:12.5px}
+  .backbox{background:var(--back-soft);border-left:4px solid var(--back);border-radius:6px;padding:11px 15px;margin:16px 0}
+  .backbox .lbl{font-weight:800;color:var(--back);font-size:12.5px}
+  .warnbox{background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:6px;padding:11px 15px;margin:14px 0}
+  .term{background:#f4eeff;color:#6929c4;border-radius:4px;padding:0 5px;font-weight:600}
+  .num{background:var(--ex-soft);color:var(--ex);border-radius:4px;padding:0 5px;font-weight:600;font-family:var(--mono);font-size:13.5px}
+  .quote{color:#444;border-left:3px solid var(--line);padding-left:10px;font-style:italic}
+  table{border-collapse:collapse;font-size:13.5px;background:var(--panel);width:100%;margin:10px 0}
+  th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+  th{background:#f2f4f7;white-space:nowrap}
+  tr.ours td{background:#eef4ff}
+  .tblwrap{overflow-x:auto}
+  code{font-family:var(--mono);font-size:13px;background:#f0f1f4;border-radius:4px;padding:1px 5px}
+  pre{background:#22262e;color:#e6e8ec;border-radius:8px;padding:12px 16px;overflow-x:auto;font:13px/1.7 var(--mono)}
+  pre code{background:none;color:inherit;padding:0}
+  ul,ol{margin:8px 0;padding-left:26px}li{margin:5px 0}
+  .katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0}
+  .svgwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;margin:14px 0}
+  .svgwrap svg{display:block;min-width:700px;width:100%;height:auto}
+  figure{margin:14px 0}figure img{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
+  figcaption{font-size:12.5px;color:var(--sub);margin-top:6px}
+  .muted{color:var(--sub);font-size:13px}
+  button{font:13px/1.4 inherit;border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 12px;cursor:pointer;color:var(--ink)}
+  button:hover{border-color:var(--acc);color:var(--acc)}
+  textarea{width:100%;min-height:90px;font:14px/1.7 inherit;border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical;background:#fff}
+
+  /* ① 一屏卡 */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:18px 0}
+  .card h2{margin:0 0 10px;font-size:17px}
+  .card .row{display:grid;grid-template-columns:110px 1fr 1fr;gap:12px;align-items:start;padding:10px 0;border-top:1px dashed var(--line)}
+  .card .row:first-of-type{border-top:0}
+  .card .k{font-weight:800;color:var(--acc);font-size:13px;padding-top:4px}
+  .card .ref{font-size:14px}
+  .card .mine textarea{min-height:70px}
+  .card .head{display:grid;grid-template-columns:110px 1fr 1fr;gap:12px;font-size:12px;color:var(--sub);margin-bottom:4px}
+  .card .head b{color:var(--ink)}
+  .card .status{font-size:12.5px;margin-top:8px;color:var(--sub)}
+  .card .status.ok{color:var(--ex);font-weight:700}
+  @media(max-width:700px){.card .row,.card .head{grid-template-columns:1fr}.card .head span:nth-child(2){display:none}}
+
+  /* ② Q 索引 */
+  .qindex{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:14px 0}
+  .qindex ol{margin:6px 0;padding-left:22px;font-size:13.5px}
+  .qindex .empty{color:var(--sub);font-size:13px}
+
+  /* ③ 标签页 */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin:26px 0 6px;position:sticky;top:0;background:var(--bg);z-index:5;padding-top:6px}
+  .tabs button{border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;padding:7px 16px;font-weight:700;color:var(--sub);background:#f2f4f7}
+  .tabs button.on{background:var(--panel);color:var(--acc);border-color:var(--acc)}
+  .tabs .cnt{font-weight:400;font-size:11.5px;margin-left:4px}
+  .tab{display:none}.tab.on{display:block}
+
+  /* Q 块(插在各节末尾) */
+  .qa{background:#fff;border:1px solid #c7d7ff;border-left:5px solid var(--acc);border-radius:8px;padding:10px 16px;margin:16px 0}
+  .qa .qh{font-weight:800;color:var(--acc);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .qa .qd{font-weight:400;color:var(--sub);font-size:12px}
+  .qa .qb{margin-top:6px}
+
+  /* 夯实 tab */
+  .item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0}
+  .item .q{font-weight:700}.item .q .n{display:inline-block;min-width:26px;color:var(--acc);font-family:var(--mono);font-size:13px}
+  .item .ans{display:none;margin-top:10px;padding:10px 12px;background:var(--ex-soft);border-left:4px solid var(--ex);border-radius:6px}
+  .item.open .ans{display:block}
+  .item .where{font-size:12.5px;color:var(--back);margin-top:6px}
+  .item .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  button.reveal{background:var(--acc-soft);border-color:#c7d7ff;color:var(--acc);font-weight:600}
+  .grade{display:none;gap:6px}.item.open .grade{display:flex}
+  .g.ok.on{background:var(--ex);color:#fff;border-color:var(--ex)}
+  .g.half.on{background:var(--ask);color:#fff;border-color:var(--ask)}
+  .g.no.on{background:var(--warn);color:#fff;border-color:var(--warn)}
+  .item.g-ok{border-left:4px solid var(--ex)}.item.g-half{border-left:4px solid var(--ask)}.item.g-no{border-left:4px solid var(--warn)}
+  .tf .choice{display:flex;gap:8px;margin-top:8px}.tf .choice button.on{background:#22262e;color:#fff;border-color:#22262e}
+  .tf .verdict{display:none;margin-top:8px;font-weight:700}.tf.answered .verdict{display:block}.tf.answered .ans{display:block}
+  .tf .verdict.right{color:var(--ex)}.tf .verdict.wrong{color:var(--warn)}
+  .fog{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+  .fog .bar{display:grid;grid-template-columns:150px 1fr 60px;gap:10px;align-items:center;margin:6px 0;font-size:13.5px}
+  .fog .track{height:10px;background:#f0f1f4;border-radius:5px;overflow:hidden}.fog .fill{height:100%;background:var(--warn);width:0}.fog .ok .fill{background:var(--ex)}
+  @media(max-width:700px){.fog .bar{grid-template-columns:110px 1fr 50px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="t">一屏卡</div>
+  <a href="#card">脊椎 / 四格 / 裁决 / 我的版本</a>
+  <a href="#qindex">Q 索引</a>
+  <!-- 每个 tab 一组目录;JS 只显示当前 tab 的那组 -->
+  <div class="grp" data-tab="lesson"><div class="t">讲义</div>
+    <a href="#l0">第 0 课 · {{L0_TITLE}}</a>
+    <a href="#l1">第 1 课 · {{L1_TITLE}}</a>
+    <!-- … -->
+  </div>
+  <div class="grp" data-tab="source"><div class="t">原文对照</div>
+    <a href="#s0">0 · 元信息 / 摘要</a>
+    <a href="#s1">1 · {{SEC1}}</a>
+    <!-- … 镜像 paper 章节 -->
+  </div>
+  <div class="grp" data-tab="drill"><div class="t">夯实</div>
+    <a href="#d-recall">提取卡</a><a href="#d-tf">判断题</a><a href="#d-must">必答题</a><a href="#d-fog">雾定位器</a>
+  </div>
+  <div class="grp" data-tab="symbols"><div class="t">符号表</div>
+    <a href="#sym-a">A 核心量</a><a href="#sym-b">B 集合/空间</a><a href="#sym-c">C 概率/损失</a><a href="#sym-d">D 评估</a><a href="#sym-e">E 缩写</a>
+  </div>
+  <div style="margin-top:14px"><a href="../battleboard.html">← 作战板</a><a href="../README.md">← 线入口</a></div>
+</nav>
+
+<main>
+<h1>{{TITLE_ZH}}</h1>
+<div class="meta">
+  <span class="chip"><b>论文</b> {{TITLE_EN}} · <a href="{{ARXIV_URL}}">arXiv {{ARXIV_ID}}</a></span>
+  <span class="chip"><b>作者</b> {{AUTHORS_SHORT}} · {{INSTITUTION}}</span>
+  <span class="chip"><b>发表</b> {{VENUE}}</span>
+  <span class="chip"><b>读于</b> {{READ_DATE}} · 模式 {{MODE}} · 档位 {{FIELD:主场|跨领域}}</span>
+</div>
+
+<!-- ============================ ① 一屏卡 ============================ -->
+<section class="card" id="card">
+  <h2>一屏卡</h2>
+  <div class="head"><span></span><span><b>参考版</b>(agent 写;读完再看)</span><span><b>我的版本</b>(你写;右栏填满 = 这篇收尾)</span></div>
+  <div class="row"><div class="k">脊椎</div><div class="ref">{{SPINE_1_3_SENTENCES}}</div><div class="mine"><textarea data-store="card-spine" placeholder="删掉就死的那一个想法,用你自己的话"></textarea></div></div>
+  <div class="row"><div class="k">四格地图</div><div class="ref">① 谓词/概念从哪来:{{G1}}<br>② 算子/模型从哪来:{{G2}}<br>③ 规划器/推理器是谁:{{G3}}<br>④ 噪声/不确定怎么进:{{G4}}<br><span class="muted">(四格是本线的;换线时改成该线的四格)</span></div><div class="mine"><textarea data-store="card-grid" placeholder="四格各一行"></textarea></div></div>
+  <div class="row"><div class="k">边界</div><div class="ref">{{BOUNDARIES_2_4_BULLETS}}</div><div class="mine"><textarea data-store="card-bound" placeholder="它假设了什么、恰好没测什么"></textarea></div></div>
+  <div class="row"><div class="k">一句话裁决</div><div class="ref">{{VERDICT}}</div><div class="mine"><textarea data-store="card-verdict" placeholder="值不值得深挖 / 我的工作里用得上吗"></textarea></div></div>
+  <div class="status" id="cardstatus"></div>
+</section>
+
+<!-- ============================ ② Q 索引(JS 自动生成) ============================ -->
+<section class="qindex" id="qindex">
+  <b>Q 索引</b> <span class="muted">按提问顺序编号;每条 Q 就插在它所属那一节的末尾,点击跳转</span>
+  <ol id="qlist"></ol>
+  <div class="empty" id="qempty">还没有提问。你在 chat 里问,agent 把完整回答插进对应节末尾并编号。</div>
+</section>
+
+<!-- ============================ ③ 标签页 ============================ -->
+<div class="tabs" id="tabs">
+  <button data-tab="lesson" class="on">讲义</button>
+  <button data-tab="source">原文对照</button>
+  <button data-tab="drill">夯实<span class="cnt" id="drillcnt"></span></button>
+  <button data-tab="symbols">符号表</button>
+</div>
+
+<!-- ---------- 讲义 tab(跨领域:完整 lesson;主场:可只有第 0 课 + 每节要点,原文 tab 为主) ---------- -->
+<section class="tab on" data-tab="lesson">
+<p class="muted">{{LESSON_INTRO:一句话说 running example 是什么;绿框例子推进、紫框推导、黄框预判困惑、蓝框回到原文}}</p>
+
+<h2 id="l0"><span class="lb">第 0 课</span>{{L0_TITLE}}</h2>
+<p>{{…}}</p>
+<div class="backbox"><span class="lbl">回到原文</span> 这课对应 <a href="#s1" data-goto="source">Sec 1</a>。</div>
+<!-- Q-INSERT: l0 -->
+
+<h2 id="l1"><span class="lb">第 1 课</span>{{L1_TITLE}}</h2>
+<p>{{…}}</p>
+<!-- Q-INSERT: l1 -->
+
+<!-- … 更多课 … 最后一课 = 收口:四格 + 边界 + 去下一篇带什么问题 -->
+</section>
+
+<!-- ---------- 原文对照 tab(faithful 转写,镜像 paper 章节;规则见 note_schema.md) ---------- -->
+<section class="tab" data-tab="source">
+<p class="muted">逐节 faithful 转写,跟随论文自己的章节顺序;不加评价、不加例子。查细节用,不通读。</p>
+
+<h2 id="s0"><span class="lb">0</span>元信息 / 摘要</h2>
+<p class="quote">{{ABSTRACT_EN}}</p>
+<p>{{ABSTRACT_ZH}}</p>
+<!-- Q-INSERT: s0 -->
+
+<h2 id="s1"><span class="lb">1</span>{{SEC1}}</h2>
+<p>{{…}}</p>
+<!-- Q-INSERT: s1 -->
+
+<!-- … 镜像到最后一节 … -->
+</section>
+
+<!-- ---------- 夯实 tab(常设;主场 ≤10 题轻量版,跨领域全量版) ---------- -->
+<section class="tab" data-tab="drill">
+<div class="warnbox"><b>用法</b>:合上讲义,先答,再点「翻答案」,自评 ✓ / △ / ✗。△ 按 ✗ 对待。答案面就是原 paper-card 的「必须掌握的 K 件事」,读完也可以直接翻答案面当参考。</div>
+
+<h2 id="d-recall"><span class="lb">Ⅰ</span>提取卡:必须掌握的 K 件事</h2>
+<div class="item" data-id="c1" data-lesson="l1">
+  <div class="q"><span class="n">C1</span>{{QUESTION}}</div>
+  <div class="ans">{{CANONICAL_ANSWER}}<div class="where">讲义 第 1 课 · 原文 Sec X</div></div>
+  <div class="row"><button class="reveal">翻答案</button><div class="grade"><button class="g ok">✓ 会</button><button class="g half">△ 半会</button><button class="g no">✗ 不会</button></div></div>
+</div>
+<!-- … 主场 5–8 条;跨领域 8–10 条 … -->
+
+<h2 id="d-tf"><span class="lb">Ⅱ</span>判断题:雾通常藏在这些误解里</h2>
+<div class="item tf" data-id="t1" data-lesson="l2" data-key="F">
+  <div class="q"><span class="n">T1</span>{{STATEMENT}}</div>
+  <div class="choice"><button data-v="T">对</button><button data-v="F">错</button></div><div class="verdict"></div>
+  <div class="ans"><b>错。</b>{{WHY}}<div class="where">讲义 第 2 课</div></div>
+</div>
+<!-- … 主场可省略本节;跨领域 8–12 题 … -->
+
+<h2 id="d-must"><span class="lb">Ⅲ</span>必答题:先写,再对</h2>
+<div class="item" data-id="m1" data-lesson="l0">
+  <div class="q"><span class="n">M1</span>{{MUST_ANSWER_QUESTION:阅读路线里挂着的那道题,或 paper 的承重问题}}</div>
+  <textarea data-store="m1" placeholder="先写自己的版本,写完再翻。"></textarea>
+  <div class="ans">{{REFERENCE_ANSWER}}</div>
+  <div class="row"><button class="reveal">翻参考答案</button><div class="grade"><button class="g ok">✓ 覆盖全</button><button class="g half">△ 漏了 1–2 点</button><button class="g no">✗ 写不出</button></div></div>
+</div>
+
+<h2 id="d-fog"><span class="lb">Ⅳ</span>雾定位器</h2>
+<p class="muted">按课统计 △ 和 ✗。只回红条最长的那一课。</p>
+<div class="fog" id="fogbox"></div>
+<div class="box" id="passbox" style="display:none"></div>
+<div class="row"><button id="resetbtn">清空本页所有自评与作答</button> <span class="muted">记录只在这台浏览器里。</span></div>
+</section>
+
+<!-- ---------- 符号表 tab(原 qa.md Q1;不占 Q 号) ---------- -->
+<section class="tab" data-tab="symbols">
+<p class="muted">paper 用到的全部符号 / 缩写。讲义与原文里出现的记号都要能在这里查到。</p>
+<h2 id="sym-a"><span class="lb">A</span>单个时间步的核心量</h2>
+<div class="tblwrap"><table><tr><th>符号</th><th>含义</th><th>位置</th></tr><tr><td>$x$</td><td>{{…}}</td><td>Sec X</td></tr></table></div>
+<h2 id="sym-b"><span class="lb">B</span>集合 / 空间</h2>
+<div class="tblwrap"><table><tr><th>符号</th><th>含义</th></tr><tr><td>{{…}}</td><td>{{…}}</td></tr></table></div>
+<h2 id="sym-c"><span class="lb">C</span>概率 / 期望 / 损失</h2>
+<div class="tblwrap"><table><tr><th>符号</th><th>含义</th></tr><tr><td>{{…}}</td><td>{{…}}</td></tr></table></div>
+<h2 id="sym-d"><span class="lb">D</span>评估指标</h2>
+<div class="tblwrap"><table><tr><th>符号</th><th>含义</th></tr><tr><td>{{…}}</td><td>{{…}}</td></tr></table></div>
+<h2 id="sym-e"><span class="lb">E</span>缩写</h2>
+<div class="tblwrap"><table><tr><th>缩写</th><th>全称</th><th>含义</th></tr><tr><td>{{…}}</td><td>{{…}}</td><td>{{…}}</td></tr></table></div>
+</section>
+
+<!--
+  Q 块格式(agent 插入时照抄;插在对应节末尾的 Q-INSERT 标记之前):
+
+  div.qa#q3
+    div.qh  >  span "Q3 · 〈问题的简短标题〉"  +  span.qd "2026-09-04"
+    div.qb  >  〈完整回答:含全部例子、推导、表格;详细度 ≥ chat〉
+
+  即:<div class="qa" id="q3"><div class="qh"><span>Q3 · 标题</span><span class="qd">日期</span></div><div class="qb">正文</div></div>
+-->
+
+</main>
+</div>
+
+<script>
+(function(){
+  var KEY='note:{{SLUG}}';
+  var state={};
+  try{state=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){state={};}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+
+  /* ---- tabs ---- */
+  var tabBtns=$$('#tabs button'), tabs=$$('.tab'), grps=$$('.toc .grp');
+  function showTab(name){
+    tabBtns.forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===name);});
+    tabs.forEach(function(t){t.classList.toggle('on',t.getAttribute('data-tab')===name);});
+    grps.forEach(function(g){g.classList.toggle('on',g.getAttribute('data-tab')===name);});
+    state._tab=name;save();
+  }
+  tabBtns.forEach(function(b){b.addEventListener('click',function(){showTab(b.getAttribute('data-tab'));});});
+  function tabOf(el){var t=el&&el.closest?el.closest('.tab'):null;return t?t.getAttribute('data-tab'):null;}
+  function gotoHash(h){
+    if(!h)return;var el=document.getElementById(h.replace('#',''));if(!el)return;
+    var t=tabOf(el);if(t)showTab(t);
+    setTimeout(function(){el.scrollIntoView({block:'start'});},0);
+  }
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href^="#"]');if(!a)return;
+    e.preventDefault();gotoHash(a.getAttribute('href'));history.replaceState(null,'',a.getAttribute('href'));
+  });
+  showTab(state._tab||'lesson');
+  if(location.hash)gotoHash(location.hash);
+
+  /* ---- textareas persist (card + drill) ---- */
+  $$('textarea[data-store]').forEach(function(t){
+    var k='txt_'+t.getAttribute('data-store');
+    if(state[k])t.value=state[k];
+    t.addEventListener('input',function(){state[k]=t.value;save();cardStatus();});
+  });
+  function cardStatus(){
+    var keys=['card-spine','card-grid','card-bound','card-verdict'];
+    var n=keys.filter(function(k){return (state['txt_'+k]||'').trim().length>0;}).length;
+    var s=$('#cardstatus');if(!s)return;
+    s.textContent=n===keys.length?'右栏已填满:这篇收尾。':'右栏 '+n+'/'+keys.length+' 已填;填满即收尾。';
+    s.className='status'+(n===keys.length?' ok':'');
+  }
+  cardStatus();
+
+  /* ---- Q index (auto) ---- */
+  var qs=$$('.qa').map(function(el){
+    var m=/^q(\d+)$/.exec(el.id||'');var n=m?parseInt(m[1],10):9999;
+    var title=($('.qh span',el)||{}).textContent||el.id;
+    var sec=el.previousElementSibling;while(sec&&!/^H[23]$/.test(sec.tagName))sec=sec.previousElementSibling;
+    var h2=el;while(h2&&h2.tagName!=='H2')h2=h2.previousElementSibling;
+    var tabName={lesson:'讲义',source:'原文',drill:'夯实',symbols:'符号表'}[tabOf(el)]||'';
+    return {n:n,id:el.id,title:title,sec:h2?h2.textContent.trim():'',tab:tabName};
+  }).sort(function(a,b){return a.n-b.n;});
+  var ql=$('#qlist');
+  qs.forEach(function(q){var li=document.createElement('li');li.innerHTML='<a href="#'+q.id+'">'+q.title+'</a> <span class="muted">· '+q.tab+(q.sec?' · '+q.sec:'')+'</span>';ql.appendChild(li);});
+  if(qs.length)$('#qempty').style.display='none';
+
+  /* ---- drill ---- */
+  var items=$$('.tab[data-tab="drill"] .item[data-id]');
+  var LESSONS={};$$('.tab[data-tab="lesson"] h2[id]').forEach(function(h){LESSONS[h.id]=h.textContent.trim();});
+  function paint(it){
+    var id=it.getAttribute('data-id'),v=state[id];
+    it.classList.remove('g-ok','g-half','g-no');$$('.g',it).forEach(function(b){b.classList.remove('on');});
+    if(v){it.classList.add('g-'+v);var b=$('.g.'+v,it);if(b)b.classList.add('on');}
+    if(it.classList.contains('tf')){
+      var pick=state[id+'_pick'];
+      $$('.choice button',it).forEach(function(b){b.classList.toggle('on',b.getAttribute('data-v')===pick);});
+      var vd=$('.verdict',it);
+      if(pick){it.classList.add('answered');vd.textContent=(v==='ok')?'答对':'答错';vd.className='verdict '+(v==='ok'?'right':'wrong');}
+      else it.classList.remove('answered');
+    }
+  }
+  items.forEach(function(it){
+    var id=it.getAttribute('data-id');
+    var rv=$('button.reveal',it);if(rv)rv.addEventListener('click',function(){it.classList.toggle('open');});
+    $$('.g',it).forEach(function(b){b.addEventListener('click',function(){
+      state[id]=b.classList.contains('ok')?'ok':b.classList.contains('half')?'half':'no';save();paint(it);render();});});
+    if(it.classList.contains('tf')){var key=it.getAttribute('data-key');
+      $$('.choice button',it).forEach(function(b){b.addEventListener('click',function(){
+        var v=b.getAttribute('data-v');state[id]=(v===key)?'ok':'no';state[id+'_pick']=v;save();paint(it);render();});});}
+    paint(it);
+  });
+  function render(){
+    var per={},tot={};
+    items.forEach(function(it){var L=it.getAttribute('data-lesson');if(!L)return;tot[L]=(tot[L]||0)+1;
+      var v=state[it.getAttribute('data-id')];if(v==='half'||v==='no')per[L]=(per[L]||0)+1;});
+    var box=$('#fogbox');if(!box)return;box.innerHTML='';
+    Object.keys(tot).sort(function(a,b){return ((per[b]||0)/tot[b])-((per[a]||0)/tot[a]);}).forEach(function(L){
+      var n=per[L]||0,t=tot[L],pct=Math.round(100*n/t);
+      var d=document.createElement('div');d.className='bar'+(n===0?' ok':'');
+      d.innerHTML='<div>'+(LESSONS[L]||L)+'</div><div class="track"><div class="fill" style="width:'+(n===0?100:pct)+'%"></div></div><div style="text-align:right;font-family:var(--mono);font-size:12px">'+n+'/'+t+'</div>';
+      box.appendChild(d);});
+    var done=0,ok=0;items.forEach(function(it){var v=state[it.getAttribute('data-id')];if(v){done++;if(v==='ok')ok++;}});
+    var c=$('#drillcnt');if(c)c.textContent=done?'('+ok+'/'+items.length+')':'';
+    var pb=$('#passbox');if(pb){pb.style.display=done?'block':'none';pb.textContent=(ok===items.length)?'全部 ✓。隔一天再来一遍;两遍都过就关掉这篇。':'✓ '+ok+' / 已做 '+done+' / 共 '+items.length+'。只回上面红条最长的那一课。';}
+  }
+  var rb=$('#resetbtn');if(rb)rb.addEventListener('click',function(){
+    if(!confirm('清空本页所有自评和作答(含一屏卡右栏)?'))return;
+    var tab=state._tab;state={_tab:tab};save();
+    $$('textarea[data-store]').forEach(function(t){t.value='';});
+    items.forEach(function(it){it.classList.remove('open','answered');paint(it);});render();cardStatus();});
+  render();
+})();
+</script>
+</body>
+</html>

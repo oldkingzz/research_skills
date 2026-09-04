@@ -1,11 +1,11 @@
 # Slide Schema —— outline.json 的硬约定
 
-> Agent 写完 `note.md` 之后,基于它**派生**一个 `outline.json`,然后跑 `render_slides.py` 出 `.pptx`。
+> Agent 写完 `note.html` 之后,基于它**派生**一个 `outline.json`,然后跑 `render_slides.py` 出 `.pptx`。
 > 默认 **12 页**(含 title),改长改短就调 `slides[]` 长度。
 
 ## 文件位置
 
-`<paper-dir>/outline.json`,跟 `note.md` 同级。
+`<paper-dir>/outline.json`,跟 `note.html` 同级。
 
 ## JSON schema
 

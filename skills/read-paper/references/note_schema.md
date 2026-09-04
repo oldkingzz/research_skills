@@ -1,7 +1,10 @@
-# note.md schema —— **事无巨细的 PDF 完整转写**
+# note.html schema —— **事无巨细的 PDF 完整转写**(v1.4 起 HTML 载体)
+
+> **v1.6(2026-09-04)适用范围**:本文件的 faithful 约束现在管的是 `note.html` 的**「原文对照」tab**。文件位置、frontmatter、"不该出现在 note 里的东西"里关于 paper-card / qa.md 的引用按 `note_schema_v2.md` §6 映射。
+
 
 > 这是三件套(note / qa / paper-card)里**最厚**的一件,**也是最重要的一件**。
-> 它是用户**主要的学习材料**:他打开 VSCode 预览读这份 note,不读 PDF 原文。
+> 它是用户**主要的学习材料**:他在浏览器里打开 note.html 读,不读 PDF 原文。
 
 ## 核心约定(跟之前完全不一样,务必看清)
 
@@ -27,7 +30,7 @@
 
 ## 文件位置
 
-`<paper-dir>/note.md`,跟 `main.tex` / `figs/` / `qa.md` / `paper-card.md` / `slides.pptx` 同级。
+`<paper-dir>/note.html`(v1.4 起代替 note.md),跟 `main.tex` / `figs/` / `qa.md` / `paper-card.md` / `slides.pptx` 同级。载体约定(单文件 + 内联 CSS + KaTeX CDN + sticky 目录 + 语义色块 + 紧凑表格)见 SKILL.md「v1.4」节;本文件其余 faithful 约束全部继续适用,frontmatter 信息改放页首 meta 卡。
 
 ## 必填:YAML frontmatter
 
@@ -72,7 +75,7 @@ note 的章节**镜像 paper 的 section 划分**,不是固定模板。例如 pa
 - **不要省略推导步骤**,paper 里逐步给的公式,note 里也逐步给
 
 ### 3. 图表
-- **每个 figure 必须出现**:用 `![](figs/<filename>)` 引用(filename 跟 `ingest.py` 抽出来的对应)
+- **每个 figure 必须出现**:用 `<img src="figs/<filename>">` 引用(filename 跟 `ingest.py` 抽出来的对应)
 - **每个 figure 的 caption 完整翻译**
 - **figure 的 inline 引用文字也保留**:"As shown in Figure 3, ..." → "如 Figure 3 所示,..."
 - **table 整张转写为 markdown table**,**不能省**
@@ -97,12 +100,12 @@ note 的章节**镜像 paper 的 section 划分**,不是固定模板。例如 pa
 
 ## 长度预期
 
-一篇 30 页 ML paper → note.md 通常 **8,000-25,000 字符**(中文)。
+一篇 30 页 ML paper → note.html 正文通常 **8,000-25,000 字符**(中文,不含 CSS/骨架)。
 **不要担心长度**。用户已明确:**事无巨细 > token 成本**。
 
 ## 写完 self-check checklist
 
-写完 note.md 后,agent 在 chat 里**简单 report 这 5 项**:
+写完 note.html 后,agent 在 chat 里**简单 report 这 5 项**:
 - [ ] paper 的所有 section + subsection 都覆盖了
 - [ ] paper 的所有 equation 都转写了(数一下)
 - [ ] paper 的所有 table 都转写了
