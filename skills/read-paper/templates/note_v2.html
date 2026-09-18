@@ -163,7 +163,7 @@
 
 <nav class="toc">
   <div class="t">一屏卡</div>
-  <a href="#card">脊椎 / 四格 / 裁决 / 我的版本</a>
+  <a href="#card">脊椎 / 三镜 / 裁决 / 我的版本</a>
   <a href="#qindex">Q 索引</a>
   <!-- 每个 tab 一组目录;JS 只显示当前 tab 的那组 -->
   <div class="grp" data-tab="lesson"><div class="t">讲义</div>
@@ -208,18 +208,16 @@
   <div class="row solo"><div class="k">脊椎</div><div class="ref">{{SPINE_1_3_SENTENCES}}</div></div>
   <div class="row solo"><div class="k">脉络<br><span class="muted" style="font-weight:400">(agent 全自动)</span></div><div class="ref"><b>来处</b>:{{接哪条线;上游 3–5 篇;作者谱系}} <span class="muted">[原句 Sec X / 引用数据 / agent 判断]</span><br><b>当时的极限</b>:{{…}} <span class="muted">[原句]</span><br><b>弊病</b>:{{一句}} <span class="muted">[…]</span><br><b>动作与代价</b>:{{新在哪;为什么这时候能成;付出什么}} <span class="muted">[…]</span><br><b>去处</b>:{{下游;谁在乎;对本线意味着什么}} <span class="muted">[…]</span></div></div>
   <div class="row solo"><div class="k">三镜<br><span class="muted" style="font-weight:400">(agent 全自动)</span></div><div class="ref"><b>Robotics</b>:{{系统 / 任务 / 环境;成没成;数字}}。<b>硬|软|空</b>。<br><b>AI</b>:{{本质难点;现有方法为何在此失败;定位到哪一步、变成什么量}}。<b>硬|软|空</b>。<br><b>ML</b>:{{方法为什么成立;证明 / 消融 / 只有直觉;与替代方法差在哪条假设}}。<b>硬|软|空</b>。<br><b>主要成立于 {{哪一镜}};{{哪一镜}}空。</b></div></div>
-  <div class="row solo"><div class="k">四格地图</div><div class="ref">① 谓词/概念从哪来:{{G1}}<br>② 算子/模型从哪来:{{G2}}<br>③ 规划器/推理器是谁:{{G3}}<br>④ 噪声/不确定怎么进:{{G4}}<br><span class="muted">(四格是本线的;换线时改成该线的四格)</span></div></div>
-  <div class="row solo"><div class="k">边界</div><div class="ref">{{BOUNDARIES_2_4_BULLETS}}</div></div>
+    <div class="row solo"><div class="k">边界</div><div class="ref">{{BOUNDARIES_2_4_BULLETS}}</div></div>
   <div class="row solo"><div class="k">一句话裁决</div><div class="ref">{{VERDICT}}</div></div>
   <div class="row solo"><div class="k">钉子候选<br><span class="muted" style="font-weight:400">(agent 全自动)</span></div><div class="ref">{{空的那一镜里的一个具体问题}};{{只有具备什么的人能填}};{{怎么验证}}。<b>候选,未验证。</b></div></div>
   </details>
   <div class="mineblock">
-    <div class="head"><span></span><span><b>我的版本</b>(你写;四格填满 = 这篇收尾。写你自己的话,不抄图)</span></div>
+    <div class="head"><span></span><span><b>我的版本</b>(你写;三格填满 = 这篇收尾。写你自己的话,不抄图)</span></div>
     <div class="row mine4"><div class="k">脊椎</div><div class="mine"><textarea data-store="card-spine" placeholder="删掉就死的那一个想法,用你自己的话"></textarea></div></div>
-    <div class="row mine4"><div class="k">四格</div><div class="mine"><textarea data-store="card-grid" placeholder="四格各一行"></textarea></div></div>
     <div class="row mine4"><div class="k">边界</div><div class="mine"><textarea data-store="card-bound" placeholder="它假设了什么、恰好没测什么"></textarea></div></div>
     <div class="row mine4"><div class="k">裁决</div><div class="mine"><textarea data-store="card-verdict" placeholder="值不值得深挖 / 我的工作里用得上吗"></textarea></div></div>
-    <div class="row mine4"><div class="k"></div><div class="mine"><button type="button" id="copymine" class="copybtn">复制我的版本</button> <span class="muted" id="copymsg">四格文字会复制到剪贴板,贴到 chat 里 agent 才看得到(它读不到浏览器里存的内容)</span></div></div>
+    <div class="row mine4"><div class="k"></div><div class="mine"><button type="button" id="copymine" class="copybtn">复制我的版本</button> <span class="muted" id="copymsg">三格文字会复制到剪贴板,贴到 chat 里 agent 才看得到(它读不到浏览器里存的内容)</span></div></div>
   </div>
   <div class="status" id="cardstatus"></div>
 </section>
@@ -259,7 +257,7 @@
 <p>{{…}}</p>
 <!-- Q-INSERT: l1 -->
 
-<!-- … 更多课 … 最后一课 = 收口:四格 + 边界 + 去下一篇带什么问题 -->
+<!-- … 更多课 … 最后一课 = 收口:证据强度分级板 + 边界 + 去下一篇带什么问题 -->
 </section>
 
 <!-- ---------- 原文对照 tab(faithful 转写,镜像 paper 章节;规则见 note_schema.md) ---------- -->
@@ -447,18 +445,18 @@
   render();
 })();
 
-  // 复制我的版本:agent 读不到 localStorage,用户点一下把四格贴进 chat
+  // 复制我的版本:agent 读不到 localStorage,用户点一下把三格贴进 chat
   (function(){
     var b=document.getElementById('copymine'); if(!b) return;
     b.addEventListener('click',function(){
-      var names={'card-spine':'脊椎','card-grid':'四格','card-bound':'边界','card-verdict':'裁决'};
+      var names={'card-spine':'脊椎','card-bound':'边界','card-verdict':'裁决'};
       var out=[]; document.querySelectorAll('textarea[data-store^="card-"]').forEach(function(t){
         out.push('【'+(names[t.getAttribute('data-store')]||t.getAttribute('data-store'))+'】\n'+(t.value.trim()||'(空)'));});
       var txt='我的版本('+document.title+'):\n\n'+out.join('\n\n');
       var msg=document.getElementById('copymsg');
       function done(){msg.textContent='已复制,去 chat 里粘贴';}
       if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback();});}else{fallback();}
-      function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){msg.textContent='复制失败,手动全选四格复制';}document.body.removeChild(ta);}
+      function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){msg.textContent='复制失败,手动全选三格复制';}document.body.removeChild(ta);}
     });
   })();
 </script>

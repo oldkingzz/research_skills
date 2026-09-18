@@ -22,8 +22,7 @@ card.json 字段(全部为字符串,除非注明):
     {"k": "Robotics", "t": "≤64 字", "v": "硬"},   # v ∈ 硬/软/空
     {"k": "AI", ...}, {"k": "ML", ...}
   ],
-  "grid_names": ["监督从哪来","teacher 给什么","student 怎么学","部署差距"],
-  "grid": ["≤40 字", "…", "…", "…"],
+  # grid_names / grid:2026-09-18 用户裁定取消,新卡片不要再写。老卡片带着仍可渲染。
   "bounds": ["≤34 字", "…", "…"],   # ≤3 条
   "verdict": "≤70 字",
   "nail": "≤160 字(脚本自动补「候选,未验证」)",
@@ -112,10 +111,12 @@ def lineh(size): return size * LH
 def build(d):
     # ---- limits(见 card_image_schema.md §2)
     check("title", d["title"], 30); check("spine", d["spine"], 150)
-    assert len(d["lineage"]) == 5 and len(d["lenses"]) == 3 and len(d["grid"]) == 4 and len(d["bounds"]) <= 3
+    assert len(d["lineage"]) == 5 and len(d["lenses"]) == 3 and len(d["bounds"]) <= 3
+    # 四格自 2026-09-18 起可选(用户裁定取消);老卡片仍带 grid 时照旧渲染
+    assert "grid" not in d or len(d["grid"]) == 4
     for n in d["lineage"]: check("脉络·"+n["k"], n["t"], 100); check("出处", n.get("src",""), 12)
     for l in d["lenses"]: check("三镜·"+l["k"], l["t"], 120); assert l["v"] in VERDICT_COLOR
-    for i, g in enumerate(d["grid"]): check(f"四格{i+1}", g, 90)
+    for i, g in enumerate(d.get("grid", [])): check(f"四格{i+1}", g, 90)
     for b in d["bounds"]: check("边界", b, 60)
     check("verdict", d["verdict"], 120); check("nail", d["nail"], 160)
     for t in d.get("terms", []): check("名词·"+t["k"], t["t"], 110)
@@ -179,18 +180,19 @@ def build(d):
     S.append(rect(M, top, LW, bh, "#fff", LINE)); S.append(rect(RX, top, RW, bh, "#fff", LINE))
     S.extend(L); S.extend(R)
     y = top + bh + 14
-    # ④ 四格带
-    S.append(f'<text x="{M}" y="{y+14}" font-size="{LAB}" font-weight="800" fill="{PUR}">四格地图</text>')
-    gy = y + 24; gw = (inner - 3*12) / 4
-    gl = [wrap(g, gw-20, LAB) for g in d["grid"]]
-    if max(len(x) for x in gl) > 8: raise SystemExit("[card_svg] 四格某格超过 8 行,删字。")
-    gh = 34 + max(len(x) for x in gl)*lineh(LAB) + 8
-    for i in range(4):
-        x = M + i*(gw+12)
-        S.append(rect(x, gy, gw, gh, PUR_S, PUR, r=6))
-        S.append(f'<text x="{x+10}" y="{gy+21}" font-size="{LAB}" font-weight="700" fill="{PUR}">{"①②③④"[i]} {escape(d["grid_names"][i])}</text>')
-        t, _ = text_block(x+10, gy+43, d["grid"][i], gw-20, LAB, 8, what=f"四格{i+1}"); S.append(t)
-    y = gy + gh + 14
+    # ④ 四格带(可选;2026-09-18 用户裁定取消,新卡片不再给 grid)
+    if d.get("grid"):
+        S.append(f'<text x="{M}" y="{y+14}" font-size="{LAB}" font-weight="800" fill="{PUR}">四格地图</text>')
+        gy = y + 24; gw = (inner - 3*12) / 4
+        gl = [wrap(g, gw-20, LAB) for g in d["grid"]]
+        if max(len(x) for x in gl) > 8: raise SystemExit("[card_svg] 四格某格超过 8 行,删字。")
+        gh = 34 + max(len(x) for x in gl)*lineh(LAB) + 8
+        for i in range(4):
+            x = M + i*(gw+12)
+            S.append(rect(x, gy, gw, gh, PUR_S, PUR, r=6))
+            S.append(f'<text x="{x+10}" y="{gy+21}" font-size="{LAB}" font-weight="700" fill="{PUR}">{"①②③④"[i]} {escape(d["grid_names"][i])}</text>')
+            t, _ = text_block(x+10, gy+43, d["grid"][i], gw-20, LAB, 8, what=f"四格{i+1}"); S.append(t)
+        y = gy + gh + 14
     # ⑤ 底带:边界 / 一句话裁决
     bl = [wrap("· "+b, LW-24, LAB) for b in d["bounds"]]
     if any(len(x) > 3 for x in bl): raise SystemExit("[card_svg] 边界某条超过 3 行,删字。")
