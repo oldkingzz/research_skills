@@ -155,7 +155,8 @@ addEventListener('load',()=>setTimeout(()=>{
     var r=e.getBoundingClientRect(); if(!(r.width>0&&r.right>innerWidth+2))return false;
     for(var p=e.parentElement;p;p=p.parentElement){var o=getComputedStyle(p).overflowX;
       if(o==='auto'||o==='scroll')return false;}
-    return !['path','polyline','polygon','text','rect','line','circle','ellipse','svg','tspan'].includes(e.tagName);});
+    if(e.ownerSVGElement||e.tagName==='svg')return false;          // SVG 内部一律排除，见下方说明
+    return !e.closest('.katex,.katex-display');});
   document.title='P|err='+(__errs[0]||'none')+'|empty='+(empty.join()||'none')
     +'|Q='+document.getElementById('qlist').children.length
     +'|overflow='+bad.length+'|doc='+document.documentElement.scrollWidth+'/'+innerWidth
@@ -172,7 +173,10 @@ chrome --headless=new --disable-gpu --virtual-time-budget=26000 --window-size=12
 
 合格线：`err=none`、`empty=none`、`overflow=0`、`doc` 两个数字相等、`katexErr=0`。
 
-**过滤掉 SVG 内部元素**（path/polyline/text/rect/g/marker/defs…）**和 MathML 节点**（semantics/mrow/math/annotation），它们在 `svgwrap` / `katex-display` 里超出是正常的，否则会刷出一堆假阳性。
+**过滤掉 SVG 内部元素和 MathML 节点**，它们在 `svgwrap` / `katex-display` 里超出是正常的，否则会刷出一堆假阳性。
+**用 `e.ownerSVGElement` 判，不要用 tagName 白名单**（2026-09-18 改）：白名单漏掉 `g` / `marker` / `defs` / `use` / `foreignObject`，而 `ownerSVGElement` 一次覆盖全部。原因是 SVG 子元素的 `getBoundingClientRect()` 返回的是**未经 viewBox 缩放**的坐标，所以一个 `viewBox="0 0 900 250"` 的图里，`<path>` 会报出 right≈900 而实际渲染只有 660 px 宽——**这不是溢出**。
+
+> **⚠ 不要临时另写探针。** 2026-09-18 主 session 自己手写了一版忘了加这个过滤，在两篇 note 上刷出 21 个和 6 个假的「真实溢出」，还差点当成代理的 bug 去追。**判断页面到底横不横向滚动，唯一可信的一项是 `doc` 那两个数字相等。**
 
 **等待时间不能短于 5 秒。** KaTeX 渲染完 display 公式后还会二次重排；在 4.2 秒量到过 `doc=720/500` 的溢出，5 秒后同一页面是 `500/500`。**报溢出之前先加长等待重测一次**，否则会去修一个不存在的 bug。
 
