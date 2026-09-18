@@ -8,13 +8,13 @@
   note_v2.html 骨架(read-paper v1.6,2026-09-04)
   ─────────────────────────────────────────────
   一篇 paper 只有这一个用户可读文件。结构:
-    ① 一屏卡(两栏:左 agent 参考版 / 右 用户自己写的版本,右栏存 localStorage)
+    ① 一屏卡(v1.7.1:一张 card.svg 图 + 折叠的七行全文 + 用户四个作答框,作答存 localStorage)
     ② Q 索引(JS 自动从页内所有 .qa 块生成,agent 不用手维护)
     ③ 四个标签页:讲义 / 原文对照 / 夯实 / 符号表
   agent 编辑规则:
-    - 追加 Q:找到目标节末尾的 Q-INSERT 标记(形如「Q-INSERT: l3」的 HTML 注释),在标记之前插入一个 .qa 块;
+    - 追加 Q:插在引发问题的那段 / 公式 / 框的正后面(问题在哪冒出来就放哪);只有不针对具体位置的问题才放到该节末尾的 Q-INSERT 标记(形如「Q-INSERT: l3」的 HTML 注释)之前;
       编号 = 页内现有最大 Q 号 + 1(全局递增,与位置无关);写完重读文件核对 Q 号唯一。
-    - 不要动标记本身;不要在标记以外的位置插 Q。
+    - 不要动标记本身。
     - {{...}} 是占位符,生成时全部替换;说明性注释可保留。
     - 注释里不要再嵌套写 HTML 注释(会提前闭合)。
   KaTeX 注意:不支持 \textsc;用 \mathrm。SVG <text> 里不要写 $...$。
@@ -76,6 +76,7 @@
   pre code{background:none;color:inherit;padding:0}
   ul,ol{margin:8px 0;padding-left:26px}li{margin:5px 0}
   .katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0}
+  [id]{scroll-margin-top:64px}   /* 锚点跳转时不被 sticky 标签栏盖住 */
   .svgwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;margin:14px 0}
   .svgwrap svg{display:block;min-width:700px;width:100%;height:auto}
   figure{margin:14px 0}figure img{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
@@ -90,6 +91,8 @@
   .card h2{margin:0 0 10px;font-size:17px}
   .card .row{display:grid;grid-template-columns:110px 1fr 1fr;gap:12px;align-items:start;padding:10px 0;border-top:1px dashed var(--line)}
   .card .row:first-of-type{border-top:0}
+  .card .row.solo{grid-template-columns:110px 1fr}   /* v1.7:agent 全自动行,无右栏 */
+  .card .row.solo .ref{grid-column:2 / span 2}
   .card .k{font-weight:800;color:var(--acc);font-size:13px;padding-top:4px}
   .card .ref{font-size:14px}
   .card .mine textarea{min-height:70px}
@@ -97,6 +100,18 @@
   .card .head b{color:var(--ink)}
   .card .status{font-size:12.5px;margin-top:8px;color:var(--sub)}
   .card .status.ok{color:var(--ex);font-weight:700}
+  .card .cardimg{margin:4px 0 10px;overflow-x:auto}
+  .card .cardimg svg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:10px}
+  .card .cardimg a{display:block;cursor:zoom-in}
+  .card .cardcap{font-size:12px;color:var(--sub);margin:-4px 0 10px}
+  .card details.cardfull{margin:0 0 12px;border:1px dashed var(--line);border-radius:10px;padding:6px 12px}
+  .card details.cardfull summary{cursor:pointer;font-size:13px;color:var(--sub)}
+  .card details.cardfull .row{padding:8px 0}
+  .card .mineblock .head{grid-template-columns:110px 1fr;margin-top:6px}
+  .card .row.mine4{grid-template-columns:110px 1fr}
+  .card .row.mine4 textarea{min-height:56px}
+  .card .copybtn{font:13px inherit;padding:5px 12px;border:1px solid var(--acc);color:var(--acc);background:#fff;border-radius:8px;cursor:pointer}
+  .card .copybtn:hover{background:var(--acc);color:#fff}
   @media(max-width:700px){.card .row,.card .head{grid-template-columns:1fr}.card .head span:nth-child(2){display:none}}
 
   /* ② Q 索引 */
@@ -111,7 +126,7 @@
   .tabs .cnt{font-weight:400;font-size:11.5px;margin-left:4px}
   .tab{display:none}.tab.on{display:block}
 
-  /* Q 块(插在各节末尾) */
+  /* Q 块(插在引发问题的位置正后面) */
   .qa{background:#fff;border:1px solid #c7d7ff;border-left:5px solid var(--acc);border-radius:8px;padding:10px 16px;margin:16px 0}
   .qa .qh{font-weight:800;color:var(--acc);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .qa .qd{font-weight:400;color:var(--sub);font-size:12px}
@@ -137,6 +152,10 @@
   .fog .bar{display:grid;grid-template-columns:150px 1fr 60px;gap:10px;align-items:center;margin:6px 0;font-size:13.5px}
   .fog .track{height:10px;background:#f0f1f4;border-radius:5px;overflow:hidden}.fog .fill{height:100%;background:var(--warn);width:0}.fog .ok .fill{background:var(--ex)}
   @media(max-width:700px){.fog .bar{grid-template-columns:110px 1fr 50px}}
+  /* KaTeX 隐藏的 .katex-mathml 节点会停在行尾静态位置,窄屏下把整页 scrollWidth 撑宽(2026-09-14 Geometric Entropy note 发现)。移到视口左外侧:LTR 下向左溢出不计入 scrollWidth。 */
+  .katex .katex-mathml{position:absolute!important;left:-9999px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important}
+  /* 表格 / SVG / 行间公式容器要 position:relative,否则里面 KaTeX 的绝对定位节点会逃出滚动容器撑宽整页(2026-09-14 Sriraman/Block note 发现) */
+  .tblwrap,.svgwrap,.katex-display,.card .cardimg{position:relative}
 </style>
 </head>
 <body>
@@ -148,6 +167,7 @@
   <a href="#qindex">Q 索引</a>
   <!-- 每个 tab 一组目录;JS 只显示当前 tab 的那组 -->
   <div class="grp" data-tab="lesson"><div class="t">讲义</div>
+    <a href="#lm1">第 -1 课 · 脉络</a>
     <a href="#l0">第 0 课 · {{L0_TITLE}}</a>
     <a href="#l1">第 1 课 · {{L1_TITLE}}</a>
     <!-- … -->
@@ -178,11 +198,29 @@
 <!-- ============================ ① 一屏卡 ============================ -->
 <section class="card" id="card">
   <h2>一屏卡</h2>
-  <div class="head"><span></span><span><b>参考版</b>(agent 写;读完再看)</span><span><b>我的版本</b>(你写;右栏填满 = 这篇收尾)</span></div>
-  <div class="row"><div class="k">脊椎</div><div class="ref">{{SPINE_1_3_SENTENCES}}</div><div class="mine"><textarea data-store="card-spine" placeholder="删掉就死的那一个想法,用你自己的话"></textarea></div></div>
-  <div class="row"><div class="k">四格地图</div><div class="ref">① 谓词/概念从哪来:{{G1}}<br>② 算子/模型从哪来:{{G2}}<br>③ 规划器/推理器是谁:{{G3}}<br>④ 噪声/不确定怎么进:{{G4}}<br><span class="muted">(四格是本线的;换线时改成该线的四格)</span></div><div class="mine"><textarea data-store="card-grid" placeholder="四格各一行"></textarea></div></div>
-  <div class="row"><div class="k">边界</div><div class="ref">{{BOUNDARIES_2_4_BULLETS}}</div><div class="mine"><textarea data-store="card-bound" placeholder="它假设了什么、恰好没测什么"></textarea></div></div>
-  <div class="row"><div class="k">一句话裁决</div><div class="ref">{{VERDICT}}</div><div class="mine"><textarea data-store="card-verdict" placeholder="值不值得深挖 / 我的工作里用得上吗"></textarea></div></div>
+  <!-- v1.7.1:一屏卡是一张图。七行压缩进 <paper-dir>/card.json,跑 scripts/card_svg.py 生成 card.svg,把 svg 原样贴进下面这个 div。画法与字数上限见 references/card_image_schema.md -->
+  <div class="svgwrap cardimg"><a href="card.png" target="_blank" title="点开看图片文件 card.png(2x)">
+{{CARD_SVG_INLINE}}
+  </a></div>
+  <div class="cardcap">图在栏内约 1:1 显示;点图打开 card.png 图片文件(同目录另有矢量版 card.svg)。图上只放判决和一句话理由,证据、数字、出处在下面的折叠区。</div>
+  <details class="cardfull">
+    <summary><b>七行全文</b>(参考版,agent 写;图上放不下的证据、数字、出处在这里)</summary>
+  <div class="row solo"><div class="k">脊椎</div><div class="ref">{{SPINE_1_3_SENTENCES}}</div></div>
+  <div class="row solo"><div class="k">脉络<br><span class="muted" style="font-weight:400">(agent 全自动)</span></div><div class="ref"><b>来处</b>:{{接哪条线;上游 3–5 篇;作者谱系}} <span class="muted">[原句 Sec X / 引用数据 / agent 判断]</span><br><b>当时的极限</b>:{{…}} <span class="muted">[原句]</span><br><b>弊病</b>:{{一句}} <span class="muted">[…]</span><br><b>动作与代价</b>:{{新在哪;为什么这时候能成;付出什么}} <span class="muted">[…]</span><br><b>去处</b>:{{下游;谁在乎;对本线意味着什么}} <span class="muted">[…]</span></div></div>
+  <div class="row solo"><div class="k">三镜<br><span class="muted" style="font-weight:400">(agent 全自动)</span></div><div class="ref"><b>Robotics</b>:{{系统 / 任务 / 环境;成没成;数字}}。<b>硬|软|空</b>。<br><b>AI</b>:{{本质难点;现有方法为何在此失败;定位到哪一步、变成什么量}}。<b>硬|软|空</b>。<br><b>ML</b>:{{方法为什么成立;证明 / 消融 / 只有直觉;与替代方法差在哪条假设}}。<b>硬|软|空</b>。<br><b>主要成立于 {{哪一镜}};{{哪一镜}}空。</b></div></div>
+  <div class="row solo"><div class="k">四格地图</div><div class="ref">① 谓词/概念从哪来:{{G1}}<br>② 算子/模型从哪来:{{G2}}<br>③ 规划器/推理器是谁:{{G3}}<br>④ 噪声/不确定怎么进:{{G4}}<br><span class="muted">(四格是本线的;换线时改成该线的四格)</span></div></div>
+  <div class="row solo"><div class="k">边界</div><div class="ref">{{BOUNDARIES_2_4_BULLETS}}</div></div>
+  <div class="row solo"><div class="k">一句话裁决</div><div class="ref">{{VERDICT}}</div></div>
+  <div class="row solo"><div class="k">钉子候选<br><span class="muted" style="font-weight:400">(agent 全自动)</span></div><div class="ref">{{空的那一镜里的一个具体问题}};{{只有具备什么的人能填}};{{怎么验证}}。<b>候选,未验证。</b></div></div>
+  </details>
+  <div class="mineblock">
+    <div class="head"><span></span><span><b>我的版本</b>(你写;四格填满 = 这篇收尾。写你自己的话,不抄图)</span></div>
+    <div class="row mine4"><div class="k">脊椎</div><div class="mine"><textarea data-store="card-spine" placeholder="删掉就死的那一个想法,用你自己的话"></textarea></div></div>
+    <div class="row mine4"><div class="k">四格</div><div class="mine"><textarea data-store="card-grid" placeholder="四格各一行"></textarea></div></div>
+    <div class="row mine4"><div class="k">边界</div><div class="mine"><textarea data-store="card-bound" placeholder="它假设了什么、恰好没测什么"></textarea></div></div>
+    <div class="row mine4"><div class="k">裁决</div><div class="mine"><textarea data-store="card-verdict" placeholder="值不值得深挖 / 我的工作里用得上吗"></textarea></div></div>
+    <div class="row mine4"><div class="k"></div><div class="mine"><button type="button" id="copymine" class="copybtn">复制我的版本</button> <span class="muted" id="copymsg">四格文字会复制到剪贴板,贴到 chat 里 agent 才看得到(它读不到浏览器里存的内容)</span></div></div>
+  </div>
   <div class="status" id="cardstatus"></div>
 </section>
 
@@ -204,6 +242,13 @@
 <!-- ---------- 讲义 tab(跨领域:完整 lesson;主场:可只有第 0 课 + 每节要点,原文 tab 为主) ---------- -->
 <section class="tab on" data-tab="lesson">
 <p class="muted">{{LESSON_INTRO:一句话说 running example 是什么;绿框例子推进、紫框推导、黄框预判困惑、蓝框回到原文}}</p>
+
+<h2 id="lm1"><span class="lb">第 -1 课</span>脉络:它从哪来,修的是什么病</h2>
+<p><b>时代背景</b>:{{…}}</p><p><b>当时怎么做、卡在哪</b>:{{用当时的语言,不用本篇术语}}</p><p><b>弊病</b>:{{…}}</p><p><b>这篇的动作</b>:{{…}}</p><p><b>代价</b>:{{…}}</p><p><b>去处</b>:{{…}}</p>
+<div class="askbox"><span class="lbl">为什么评审会给它高分(steelman)</span><br>{{对着 significance / novelty / claims-established / impact 四条}}</div>
+<div class="svgwrap"><svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg" font-size="12"><text x="20" y="30">{{上游}} → 本篇 → {{下游}}(内联 SVG 谱系图)</text></svg></div>
+<div class="backbox"><span class="lbl">回到原文</span> Sec 1 与 Sec 2 的原句。</div>
+<!-- Q-INSERT: lm1 -->
 
 <h2 id="l0"><span class="lb">第 0 课</span>{{L0_TITLE}}</h2>
 <p>{{…}}</p>
@@ -243,7 +288,7 @@
   <div class="ans">{{CANONICAL_ANSWER}}<div class="where">讲义 第 1 课 · 原文 Sec X</div></div>
   <div class="row"><button class="reveal">翻答案</button><div class="grade"><button class="g ok">✓ 会</button><button class="g half">△ 半会</button><button class="g no">✗ 不会</button></div></div>
 </div>
-<!-- … 主场 5–8 条;跨领域 8–10 条 … -->
+<!-- … 主场 5–8 条;跨领域 8–10 条;v1.7 再加两道脉络题(data-lesson="lm1"):"这篇之前的做法是什么、坏在哪""这篇付出的代价是什么、为什么这时候能成" … -->
 
 <h2 id="d-tf"><span class="lb">Ⅱ</span>判断题:雾通常藏在这些误解里</h2>
 <div class="item tf" data-id="t1" data-lesson="l2" data-key="F">
@@ -251,7 +296,7 @@
   <div class="choice"><button data-v="T">对</button><button data-v="F">错</button></div><div class="verdict"></div>
   <div class="ans"><b>错。</b>{{WHY}}<div class="where">讲义 第 2 课</div></div>
 </div>
-<!-- … 主场可省略本节;跨领域 8–12 题 … -->
+<!-- … 主场可省略本节;跨领域 8–12 题;v1.7 必有一道三镜题:"这篇主要在哪一镜下成立?哪一镜是空的?" … -->
 
 <h2 id="d-must"><span class="lb">Ⅲ</span>必答题:先写,再对</h2>
 <div class="item" data-id="m1" data-lesson="l0">
@@ -401,6 +446,21 @@
     items.forEach(function(it){it.classList.remove('open','answered');paint(it);});render();cardStatus();});
   render();
 })();
+
+  // 复制我的版本:agent 读不到 localStorage,用户点一下把四格贴进 chat
+  (function(){
+    var b=document.getElementById('copymine'); if(!b) return;
+    b.addEventListener('click',function(){
+      var names={'card-spine':'脊椎','card-grid':'四格','card-bound':'边界','card-verdict':'裁决'};
+      var out=[]; document.querySelectorAll('textarea[data-store^="card-"]').forEach(function(t){
+        out.push('【'+(names[t.getAttribute('data-store')]||t.getAttribute('data-store'))+'】\n'+(t.value.trim()||'(空)'));});
+      var txt='我的版本('+document.title+'):\n\n'+out.join('\n\n');
+      var msg=document.getElementById('copymsg');
+      function done(){msg.textContent='已复制,去 chat 里粘贴';}
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback();});}else{fallback();}
+      function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){msg.textContent='复制失败,手动全选四格复制';}document.body.removeChild(ta);}
+    });
+  })();
 </script>
 </body>
 </html>

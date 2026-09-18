@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>read-paper v1.7 提案:脉络与三镜</title>
+<style>
+  :root{--ink:#1a1d23;--sub:#5a6270;--line:#e3e6eb;--bg:#fbfbfc;--panel:#fff;--acc:#0f62fe;--acc-soft:#eef4ff;--ex:#0e6027;--ex-soft:#e9f6ec;--dv:#8a3ffc;--dv-soft:#f6f0ff;--ask:#8a6a00;--ask-soft:#fff8e1;--warn:#a2191f;--warn-soft:#ffefef;--mono:"SF Mono",ui-monospace,Menlo,monospace}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.85 -apple-system,"PingFang SC","Hiragino Sans GB",sans-serif}
+  main{min-width:0}.wrap{display:grid;grid-template-columns:225px 1fr;max-width:1200px;margin:0 auto;gap:28px;padding:24px 30px 120px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr;padding:16px 14px 80px}.toc{display:none}}
+  .toc{position:sticky;top:20px;align-self:start;font-size:12.5px;border-right:1px solid var(--line);padding-right:14px;max-height:92vh;overflow-y:auto}
+  .toc a{display:block;color:var(--sub);text-decoration:none;padding:3px 0 3px 8px}.toc a:hover{color:var(--acc)}.toc .t{font-weight:700;color:var(--ink);margin:10px 0 6px}
+  h1{font-size:24px;margin:0 0 6px}h2{font-size:19px;margin:44px 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lb{background:var(--acc);color:#fff;font-weight:800;border-radius:8px;padding:2px 13px;font-size:14px;white-space:nowrap}h3{font-size:15.5px;margin:24px 0 8px}p{margin:9px 0}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0}
+  .exbox{background:var(--ex-soft);border-left:4px solid var(--ex);border-radius:6px;padding:11px 15px;margin:14px 0}.exbox .lbl{font-weight:800;color:var(--ex);font-size:12.5px}
+  .dvbox{background:var(--dv-soft);border-left:4px solid var(--dv);border-radius:6px;padding:11px 15px;margin:14px 0}.dvbox .lbl{font-weight:800;color:var(--dv);font-size:12.5px}
+  .askbox{background:var(--ask-soft);border-left:4px solid var(--ask);border-radius:6px;padding:11px 15px;margin:14px 0}.askbox .lbl{font-weight:800;color:var(--ask);font-size:12.5px}
+  .warnbox{background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:6px;padding:11px 15px;margin:14px 0}
+  table{border-collapse:collapse;font-size:13.5px;background:var(--panel);width:100%;margin:10px 0}th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{background:#f2f4f7;white-space:nowrap}.tblwrap{overflow-x:auto}
+  code{font-family:var(--mono);font-size:13px;background:#f0f1f4;border-radius:4px;padding:1px 5px}pre{background:#22262e;color:#e6e8ec;border-radius:8px;padding:12px 16px;overflow-x:auto;font:13px/1.7 var(--mono)}
+  ul,ol{margin:8px 0;padding-left:26px}li{margin:5px 0}.muted{color:var(--sub);font-size:13px}.meta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--sub);max-width:100%}.chip b{color:var(--ink)}
+  .svgwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;margin:14px 0}.svgwrap svg{display:block;min-width:700px;width:100%;height:auto}
+  .diff{background:#f6f8fa;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;margin:10px 0}
+  .add{color:#0e6027}.del{color:#a2191f;text-decoration:line-through}
+  [id]{scroll-margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+  <div class="t">提案目录</div>
+  <a href="#p0">0 · 你的话翻译成 skill 的缺口</a>
+  <a href="#p1">1 · 借来的五个框架</a>
+  <a href="#p2">2 · 三镜:可操作的定义</a>
+  <a href="#p3">3 · 脉络:五格与证据要求</a>
+  <a href="#p4">4 · v1.7 改动清单</a>
+  <a href="#p5">5 · 样例一:Zhu 2412.09743</a>
+  <a href="#p6">6 · 样例二:Jin &amp; Posa 2211.16657</a>
+  <a href="#p7">7 · 这怎么帮你找钉子</a>
+  <a href="#p8">8 · 待你裁定的三件事</a>
+  <a href="#src">来源</a>
+</nav>
+<main>
+<h1>read-paper v1.7 提案:脉络与三镜</h1>
+<div class="meta">
+  <span class="chip"><b>日期</b> 2026-09-12</span>
+  <span class="chip"><b>状态</b> <b>已采纳并实施(2026-09-12)</b>。用户裁定:① connect 解禁 → 连但标出处;② 允许联网拉引用;③ 三镜等新三行<b>全自动</b>,不留右栏(否决了"右栏你填"的设计)。实施:note_schema_v2 §9、SKILL v1.7、模板、lesson_schema 第 6 条、AGENTS.md、scripts/lineage.py</span>
+  <span class="chip"><b>动因</b> 你 09-12 的话:"我拥有锤子,但并不是有钉子才有的锤子……我读论文不能仅仅为了学习知识,我还要知道他背后的脉络"</span>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="p0"><span class="lb">0</span>你的话,翻译成 skill 的缺口</h2>
+
+<p>你说的是三件事,不是一件:</p>
+<ol>
+<li><b>脉络</b>:这篇从哪条线上长出来,它之前的人卡在哪,作者为什么在这个时候写它,它之后长出了什么。</li>
+<li><b>为什么是它</b>:它修了行业里什么"严重弊病",凭什么称得上 best paper 级。</li>
+<li><b>用哪种人的脑子解的</b>:robotics 的"在这个环境里能不能做成"、AI 的"难点到底在哪"、ML 的"方法为什么成立"。</li>
+</ol>
+
+<p>对照 v1.6 的一屏卡(脊椎 / 四格 / 边界 / 裁决)和讲义(第 0 课讲"这篇解决什么"),这三件事一件都没有固定位置。更糟的是,v1.3 有一条明文规则:<b>agent 不主动做跨论文 connect,理由是那是用户的认知工作</b>。这条规则和你现在要的直接冲突。它当初防的是"agent 替你编关联",防法是不让 agent 连;正确的防法应该是<b>连,但每条连线标出处</b>。</p>
+
+<div class="warnbox"><b>诊断一句话</b>:v1.6 教你把一篇论文吃透,不教你把它放回来处。读十篇是十个孤岛,广度有了,脉络没有。你形容的"有锤子没钉子"在读论文上的形态就是这个:每篇都懂,但说不出它们之间的缝在哪。</div>
+
+<!-- ============================================================ -->
+<h2 id="p1"><span class="lb">1</span>借来的五个框架(网上查的,都是老东西,正好用)</h2>
+
+<div class="tblwrap"><table>
+<tr><th>框架</th><th>它问什么</th><th>拿来做什么</th></tr>
+<tr><td><b>Heilmeier 八问</b>(DARPA)</td><td>①要做什么,不许用行话 ②现在怎么做、极限在哪 ③新在哪、为什么能成 ④谁在乎 ⑤风险 ⑥⑦成本时间 ⑧怎么验收</td><td>②③④ 就是你要的"弊病 / 解法 / 为什么重要"。脉络格的骨架直接用它。</td></tr>
+<tr><td><b>Marr 三层</b>(计算 / 算法 / 实现)</td><td>计算层:问题是什么、为什么这么定义;算法层:用什么表示和过程;实现层:在什么物理基底上跑</td><td>和你的三镜几乎一一对应:AI 镜 ≈ 计算层(难点在哪),ML 镜 ≈ 算法层(方法为什么成立),robotics 镜 ≈ 实现层(在具体系统上能不能成)。这说明你的三镜不是随手分的,是有理论根的。</td></tr>
+<tr><td><b>Keshav 三遍读法</b></td><td>第一遍 5 分钟定"贡献类型";第二遍抓论证;第三遍复现</td><td>第一遍就该答"这篇是哪一镜下的贡献"。v1.6 把三遍都做成了产物,但没有"贡献类型"这个字段。</td></tr>
+<tr><td><b>Hamming《你和你的研究》</b></td><td>大科学家花时间想"什么问题重要",而且开着门</td><td>钉子不是从自己的锤子里长出来的,是从别人卡住的问题里长出来的。脉络格里"当时的极限"那一栏,就是在替你开门。</td></tr>
+<tr><td><b>CoRL / ICRA 评审与奖项标准</b></td><td>significance、novelty、claims 是否被实验建立、impact;奖项看 technical merit、originality、relevance、potential impact、clarity</td><td>"为什么是 best paper"有官方答案:四项都高。脉络格里"新在哪"必须能对上 novelty,"谁在乎"对上 impact。</td></tr>
+</table></div>
+
+<p>还有一个工具:Semantic Scholar 的 API 有 <code>/paper/{id}/references</code> 和 <code>/citations</code> 两个端点,能拉上游和下游。脉络格里的"上游 / 下游"可以半自动生成,再由 agent 从论文自己的 related work 里核对。</p>
+
+<!-- ============================================================ -->
+<h2 id="p2"><span class="lb">2</span>三镜:把你的描述变成可操作的问题</h2>
+
+<div class="tblwrap"><table>
+<tr><th>镜</th><th>这种人问的问题(你的原话)</th><th>读一篇论文时的具体三问</th><th>输出格式</th></tr>
+<tr><td><b>Robotics</b></td><td>在特定环境下能不能实现某个东西,pick and place 能不能又快又准</td><td>① 什么系统、什么任务、什么环境(仿真 / 真机,n 多少)② 做成了没有,快不快准不准稳不稳(数字)③ 换个物体 / 换个场景还成不成</td><td>一句"能不能"的判决 + 三个数字</td></tr>
+<tr><td><b>AI</b></td><td>任何一个问题难在哪里,像千禧年难题难在哪,然后用方法解决它</td><td>① 这个任务的<b>本质难点</b>是什么(不是工程难:组合爆炸?分布偏移?不可观测?有损抽象?)② 现有方法为什么恰好在这里失败 / 不泛化 ③ 这篇把难点<b>定位到了哪一步</b>,有没有把它变成一个可测的量</td><td>难点一句话 + "变成了什么量"</td></tr>
+<tr><td><b>ML</b></td><td>方法本身如何成立,为什么 flow matching 比 AR 好</td><td>① 方法为什么成立,机制是什么(不是"它 work",是"它为什么 work")② 有没有证明 / 消融把机制隔离出来 ③ 和替代方法的差别落在哪条假设上</td><td>机制一句话 + 证据强度(证明 / 消融 / 只有直觉)</td></tr>
+</table></div>
+
+<p>三镜各填完,再加两格判决:</p>
+<ul>
+<li><b>这篇主要在哪一镜下成立</b>:一篇论文通常只在一镜下是硬的,另外两镜是软的或空的。写清楚。</li>
+<li><b>哪一镜是空的</b>:空的那格就是钉子候选。Jiayuan 问你"为什么 diffusion 比 AR 强"、你答了口号、她说没人知道——那就是 Zhu 那篇 ML 镜下的空格。</li>
+</ul>
+
+<div class="askbox"><span class="lbl">为什么三镜比"批判要点"有用</span><br>v1.6 的"边界 / 批判"是在问"它哪里不够硬",答案总是一堆条目。三镜是在问"它在哪一层硬、哪一层空",答案是一个位置。位置能累积成地图,条目不能。</div>
+
+<!-- ============================================================ -->
+<h2 id="p3"><span class="lb">3</span>脉络:五格,每格要出处</h2>
+
+<div class="tblwrap"><table>
+<tr><th>格</th><th>问什么</th><th>出处要求</th></tr>
+<tr><td><b>来处</b></td><td>它接的是哪条线;上游 3 到 5 篇是谁;作者谱系(哪个组、师承、前作)</td><td>论文自己的 related work + intro 里"building on our prior work"这类句子;可选 Semantic Scholar references</td></tr>
+<tr><td><b>当时的极限</b></td><td>这篇写之前,这件事怎么做,做到哪就卡住(Heilmeier ②)</td><td>intro 第一二段几乎总有;标原句</td></tr>
+<tr><td><b>弊病</b></td><td>它要修的那个"严重弊病"一句话;是行业弊病还是学术弊病</td><td>agent 的判断,但要指向上一格的原句</td></tr>
+<tr><td><b>动作与代价</b></td><td>新在哪(Heilmeier ③);为什么这时候能成(什么前置条件刚刚成熟);付出了什么代价(假设、范围)</td><td>贡献列表 + 前作引用;代价从 limitations 与实验设置里抠</td></tr>
+<tr><td><b>去处</b></td><td>它之后长出了什么;谁在乎(Heilmeier ④);对我这条线意味着什么</td><td>Semantic Scholar citations top-N(可选);"对我"那一句是 agent 的,标明</td></tr>
+</table></div>
+
+<div class="warnbox"><b>和 v1.3 的冲突,建议这样解</b>:保留"不连到用户在职公司的论文"这一条(那是利益问题,不是认知问题);删掉"不主动 connect"。新规则:<b>连,每条连线标出处;出处是论文原句、引用数据、或"agent 判断"三选一,不许混</b>。</div>
+
+<!-- ============================================================ -->
+<h2 id="p4"><span class="lb">4</span>v1.7 改动清单</h2>
+
+<h3>4.1 一屏卡:从四行变七行</h3>
+<div class="diff">  脊椎
+<span class="add">+ 脉络(来处 / 极限 / 弊病 / 动作与代价 / 去处,每条带出处)</span>
+<span class="add">+ 三镜(Robotics / AI / ML 各一句 + 主要在哪一镜成立 + 哪一镜空)</span>
+  四格地图(本线四格)
+  边界
+  一句话裁决
+<span class="add">+ 钉子候选(空的那一镜里,只有谁能填的那个问题;标明"候选")</span>
+右栏三个新行同样留给你自己写;收尾定义不变(原四行填满即收尾;新三行不计入,免得门槛变高)。</div>
+
+<h3>4.2 讲义:固定加一课"脉络课",放第 0 课之前</h3>
+<p>内容顺序固定:时代背景 → 当时怎么做、卡在哪 → 这篇的动作 → 代价 → 它之后长出了什么 → 为什么评审会给它高分(steelman)。配一张谱系小图(上游三五篇 → 本篇 → 下游),SVG 内联。篇幅上限:讲义总量的 20%。</p>
+
+<h3>4.3 夯实:加三道题</h3>
+<ul>
+<li>脉络题两道:"这篇之前的做法是什么、坏在哪?""这篇付出的代价是什么?"</li>
+<li>三镜题一道:"这篇主要在哪一镜下成立?哪一镜是空的?"</li>
+</ul>
+
+<h3>4.4 SKILL.md 与 schema 的改动</h3>
+<div class="diff"><span class="del">- v1.3:paper-card 移除 Connect;跨 paper connect 是用户的认知工作,agent 不主动做</span>
+<span class="add">+ v1.7:一屏卡加脉络行;agent 主动连,每条连线标出处(原句 / 引用数据 / agent 判断三选一)</span>
+<span class="add">+ 仍然不连到用户在职公司的论文</span>
+<span class="add">+ Step 3.5(可选,网络可用时):拉论文的 related work 段 + Semantic Scholar references/citations 前 10,存 lineage.json,供脉络课引用</span>
+<span class="add">+ note_schema_v2 §2 一屏卡表加三行;§5 讲义表加"第 -1 课·脉络课"为必有</span>
+<span class="add">+ lesson_schema 铁律加第 6 条:第 -1 课不许用本篇的术语描述"当时的极限",要用当时的语言</span></div>
+
+<h3>4.5 不改的</h3>
+<p>单文件、Q 块规则、夯实分档、符号表、右栏归用户、截图验证——全部不动。</p>
+
+<!-- ============================================================ -->
+<h2 id="p5"><span class="lb">5</span>样例一:Zhu et al. 2412.09743 填一遍</h2>
+
+<div class="tblwrap"><table>
+<tr><th>脉络格</th><th>内容</th><th>出处</th></tr>
+<tr><td>来处</td><td>三条线汇合:① 从算法专家做 teacher-student BC(自动驾驶 Zhang 2021、足式 Miki 2022、灵巧手 Chen 2023);② 穿越接触的规划(Pang 2023 全局接触规划、Suh 2025 CTR 信赖域与 PRM,均为 Pang 一系);③ 数据质量理论(Belkhale 2024:好数据 = 覆盖足够 + 熵低)。作者:Pang(Boston Dynamics AI Institute)+ Righetti(NYU)</td><td>论文 intro 第 3–5 段与 Sec 2.1 原文引用</td></tr>
+<tr><td>当时的极限</td><td>BC 的成功局限在遥操采得到示教的任务;遥操接口只跟踪末端,整臂接触、多指配合采不到,而且不能规模化</td><td>intro 第 2 段原句</td></tr>
+<tr><td>弊病</td><td>行业弊病:数据来源被遥操锁死。学术弊病:大家默认"规划器造的示教 = 好示教",没人问它学不学得会</td><td>前者原句;后者 agent 判断</td></tr>
+<tr><td>动作与代价</td><td>新在哪:发现 RRT 示教高熵学不会,把"学得会"变成三个可测代理,改规划器采样结构后 100 条示教 99%。为什么这时候能成:Pang 一系的接触规划器刚好成熟到能批量生成。代价:一致性是逐任务手工设计的;学生 OOD 不会反应;DAgger 用不了</td><td>贡献列表 + Sec 4.3 原句</td></tr>
+<tr><td>去处</td><td>对你:它是 Path-OPD"teacher 给什么"的离线示教版;"DAgger 用不了"是离线示教与在线蒸馏的分界</td><td>agent 判断,标明</td></tr>
+</table></div>
+
+<div class="tblwrap"><table>
+<tr><th>镜</th><th>这篇</th><th>硬 / 软 / 空</th></tr>
+<tr><td>Robotics</td><td>两个任务(双臂转桶、Allegro 手内重定向),仿真 99% / 82%,真机零样本 90%(18/20)/ 62.5%(15/24),MoCap 给位姿</td><td><b>硬</b>,但 n 小、状态非视觉</td></tr>
+<tr><td>AI</td><td>难点定位到"示教分布的一致性 vs 覆盖":覆盖略好的 RRT 反而学不好;把一致性变成速度方向熵、每段进度、换抓时机熵三个量</td><td><b>硬</b>,这是论文最值钱的一步</td></tr>
+<tr><td>ML</td><td>为什么高熵示教 diffusion 拟合不动,论文只引了 Belkhale 的框架,没有机制解释;为什么 diffusion 比 AR 强,没答</td><td><b>空</b></td></tr>
+<tr><td>主要成立于</td><td colspan="2">AI 镜。它的贡献类型是"把一个模糊难点变成可测的量",不是新方法,也不是新系统。</td></tr>
+<tr><td>钉子候选</td><td colspan="2">规划器 teacher 要有什么性质才能做在线蒸馏(在 student 的状态上给监督)?作者点名的障碍是"规划器不能从任意状态求解",而 Posa 那篇恰好给了一个能从任意状态实时求解的接触控制器。只有同时有在线蒸馏管线和 student 侧失效数据的人能做。——候选,未验证。</td></tr>
+</table></div>
+
+<!-- ============================================================ -->
+<h2 id="p6"><span class="lb">6</span>样例二:Jin &amp; Posa 2211.16657(已按 v1.7 试点写进它的 note.html)</h2>
+
+<div class="tblwrap"><table>
+<tr><th>脉络格</th><th>内容</th><th>出处</th></tr>
+<tr><td>来处</td><td>两条线:① 学混合动力学(ContactNets Pfrommer 2020;作者自己的 LCS 学习 Jin 2022);② 接触系统的实时 MPC(Aydinoglu 的 LCS-MPC、Posa 2014 的 direct method、Le Cleac'h 2021)。Posa 是 MIT Tedrake 出身(RSS 2014 direct trajectory optimization through contact);Jin 是 Posa 的博后</td><td>intro 第 3 段 + Sec 2 + 作者简介</td></tr>
+<tr><td>当时的极限</td><td>全阶接触模型的 MPC 组合复杂度 $2^{TI}$;神经网络学不好刚性和多模态;足式里的降阶模型是手设计的,会漏关键动力学</td><td>intro 第 2 段、Sec 2.4 原句</td></tr>
+<tr><td>弊病</td><td>学术弊病:大家要么全建模(算不动),要么全平滑(丢结构)。没人问"完成任务到底需要几个模式"</td><td>intro 那句斜体问题;判断为 agent</td></tr>
+<tr><td>动作与代价</td><td>新在哪:把"降阶"定义为最小化 g-MPC 与 f-MPC 的任务性能差距,证明这个差距被"模型在 MPC 自己产生的数据上的预测误差"上界住,于是只用 on-policy 数据迭代学一个几个模式的 LCS。为什么这时候能成:LCS 学习(2022)和 LCS 实时 MPC(2022)刚成熟。代价:PWA 是线性化,大旋转不行;模式与物理接触没有一一对应;$\dim\lambda$ 靠试;只在仿真</td><td>贡献列表、Lemma 1、Sec 7.4 discussion</td></tr>
+<tr><td>去处</td><td>对你:它给的"少数任务相关模式"是让规划器能从任意状态实时回答的性质;而且它的学习本身就是 on-policy 的——模型只需要在控制器自己走到的数据上准。这两点正对着 Zhu 那篇"DAgger 用不了"的缺口</td><td>agent 判断,标明</td></tr>
+</table></div>
+
+<div class="tblwrap"><table>
+<tr><th>镜</th><th>这篇</th><th>硬 / 软 / 空</th></tr>
+<tr><td>Robotics</td><td>仿真三指手转方块 / 移方块,4 分钟、4k 样本,>50 Hz / >30 Hz,终端误差 0.06 rad / 7.6 mm;无真机</td><td><b>软</b>(全仿真,MuJoCo)</td></tr>
+<tr><td>AI</td><td>难点定位到"模式数量的组合爆炸",并给出可测的量:任务性能差距 $\mathcal L(g)$ 与其上界(on-policy 预测误差)</td><td><b>硬</b></td></tr>
+<tr><td>ML</td><td>为什么能成立:Lemma 1(Lipschitz 代价下,性能差距 ≤ 两个数据集上的模型误差),Lemma 2(g-MPC 数据是 f-MPC 的 $\epsilon$-驻点);算法只取零阶项,承认没做一阶检查</td><td><b>硬</b>(有证明,证明和算法之间有一步承认的松动)</td></tr>
+<tr><td>主要成立于</td><td colspan="2">AI + ML。这是一篇"把一个直觉变成可优化的目标并证明上界"的论文,robotics 镜是演示。</td></tr>
+</table></div>
+
+<!-- ============================================================ -->
+<h2 id="p7"><span class="lb">7</span>这怎么帮你找钉子</h2>
+
+<p>你的诊断是"广度和项目经验好,深度和总结脉络差"。这套改动对应的机制:</p>
+<ul>
+<li><b>脉络课强迫每篇答"它修了什么弊病"</b>。做二十篇之后你手里就有一个弊病库,弊病库就是钉子的原材料。Hamming 说的"知道什么问题重要",就是这个库。</li>
+<li><b>三镜强迫每篇标出空格</b>。空格累积起来会重复出现,重复出现的空格就是这个领域真正没解的问题。Jiayuan 那句"为什么 diffusion 比 AR 强没人知道"就是一个在很多篇里都空着的格。</li>
+<li><b>"钉子候选"一行强迫你写"只有谁能填"</b>。能填的人是你,它就是你的钉子;不是你,就放下。</li>
+</ul>
+
+<div class="exbox"><span class="lbl">下一步(v1.8 候选,这次不做)</span><br>每条研究线维护一个 <code>lineage.html</code>:把该线所有论文的脉络格拼成一张时间线,空格用红色标。那才是"脉络"的完整形态,但先把单篇的格填出来,不然拼不起来。</div>
+
+<!-- ============================================================ -->
+<h2 id="p8"><span class="lb">8</span>待你裁定的三件事</h2>
+<ol>
+<li><b>解禁 connect</b>:同意"连但标出处"这个替代规则吗?</li>
+<li><b>要不要联网拉引用数据</b>(Semantic Scholar):加一步能让"来处 / 去处"半自动,但每篇多几分钟,而且要网。</li>
+<li><b>三镜的判决权</b>:左栏 agent 先填,右栏你填,收尾不计入新三行。这样门槛不变。同意吗?</li>
+</ol>
+<p><b>裁定(2026-09-12)</b>:① 同意;② 允许;③ 不同意"右栏你填"——用户要全自动,新三行由 agent 填、不留右栏,收尾仍按原四行。已实施:note_schema_v2 §9、SKILL v1.7、模板 `row solo`、lesson_schema 第 6 条、AGENTS.md、scripts/lineage.py;Zhu 与 Posa 两篇 note 已同步(第 -1 课、三行改全自动)。lineage.json:Zhu 已取(42 引用 / 18 被引);Posa 因 Semantic Scholar 限流(429)三次未取到,脉络行只用原句,按规则注明。</p>
+
+<!-- ============================================================ -->
+<h2 id="src"><span class="lb">来源</span>本提案参考的公开资料</h2>
+<ul>
+<li>DARPA,<a href="https://www.darpa.mil/about/heilmeier-catechism">The Heilmeier Catechism</a>;另见 <a href="https://www.csee.umbc.edu/~finin/home/heilmeyerCatechism.html">UMBC 转载</a></li>
+<li>S. Keshav,<a href="https://dl.acm.org/doi/10.1145/1273445.1273458">How to Read a Paper</a>(ACM SIGCOMM CCR);<a href="https://blog-sc.hku.hk/reading-papers-efficiently-with-the-three-pass-approach/">HKU 的三遍法解读</a></li>
+<li>R. Hamming,<a href="https://www.cs.virginia.edu/~robins/YouAndYourResearch.html">You and Your Research</a>;<a href="https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.0030213">PLOS 的十条规则版</a></li>
+<li>Marr 三层:<a href="https://blog.shakirm.com/2013/04/marrs-levels-of-analysis/">Shakir Mohamed 的解读</a>;<a href="https://onlinelibrary.wiley.com/doi/full/10.1111/tops.12131">Love 2015, The Algorithmic Level Is the Bridge</a></li>
+<li>C. Olah,<a href="https://colah.github.io/notes/taste/">Research Taste Exercises</a>;M. Nielsen,<a href="https://michaelnielsen.org/blog/principles-of-effective-research/">Principles of Effective Research</a></li>
+<li><a href="https://www.corl.org/contributions/instruction-for-reviews">CoRL 2026 Instruction for Reviews</a>;<a href="https://www.ieee-ras.org/awards-recognition/conference-awards/ieee-icra-best-paper-award-on-robot-learning/">IEEE ICRA Best Paper Award on Robot Learning 评审标准</a></li>
+<li><a href="https://www.semanticscholar.org/product/api/tutorial">Semantic Scholar Academic Graph API tutorial</a></li>
+</ul>
+</main>
+</div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 ---
 name: read-paper
-description: Use whenever the user wants to read / summarize / understand / critique an academic paper. Auto-triggers on arxiv URLs (arxiv.org/abs/, arxiv.org/pdf/), arxiv IDs (e.g. 1706.03762), DOIs, paper titles, or natural-language asks like "读这篇 / 看一下 / summarize / explain this paper / 解释一下这篇". v1.6 (2026-09-04): each paper produces ONE user-readable file, <paper-dir>/note.html (template templates/note_v2.html, contract references/note_schema_v2.md), with five parts: (a) 一屏卡 one-screen card, two columns — left = agent reference (spine / four-grid / boundaries / verdict), right = the user's own version in localStorage textareas; right column filled = paper closed; (b) auto-generated Q index; (c) tab 讲义 = beginner-first lecture (full lesson for out-of-field papers, lesson-0 + section digests for home-field papers); (d) tab 原文对照 = exhaustive faithful Chinese transcription following the paper's own section order, every equation/table/figure/footnote retained; (e) tab 夯实 = standing retrieval drill (≤10 items home-field, 20–35 out-of-field: recall cards carrying the old paper-card must-know list, true/false misconception items, must-answer questions, per-lesson fog locator); (f) tab 符号表 = symbol/abbreviation table. User questions asked in chat are inserted as numbered Q blocks (global ask-order numbering) at the end of the relevant lesson/section before its <!-- Q-INSERT --> marker; the Q index rebuilds itself. qa.md / paper-card.md / lesson.html / drill.html are no longer generated (legacy schemas still govern the corresponding parts). Slides (.pptx) only on explicit request. LaTeX source ONLY (no PDF parsing). Three reading modes: Skim (3-line verdict, no files) / Core (predict-then-verify dialogue, answers land as Q blocks) / Teach (default). Cross-platform: same SKILL.md works in Claude Code / Codex CLI / Cursor.
+description: Use whenever the user wants to read / summarize / understand / critique an academic paper. Auto-triggers on arxiv URLs (arxiv.org/abs/, arxiv.org/pdf/), arxiv IDs (e.g. 1706.03762), DOIs, paper titles, or natural-language asks like "读这篇 / 看一下 / summarize / explain this paper / 解释一下这篇". v1.6 (2026-09-04): each paper produces ONE user-readable file, <paper-dir>/note.html (template templates/note_v2.html, contract references/note_schema_v2.md), with five parts: (a) 一屏卡 one-screen card, two columns — left = agent reference (spine / four-grid / boundaries / verdict), right = the user's own version in localStorage textareas; right column filled = paper closed; (b) auto-generated Q index; (c) tab 讲义 = beginner-first lecture (full lesson for out-of-field papers, lesson-0 + section digests for home-field papers); (d) tab 原文对照 = exhaustive faithful Chinese transcription following the paper's own section order, every equation/table/figure/footnote retained; (e) tab 夯实 = standing retrieval drill (≤10 items home-field, 20–35 out-of-field: recall cards carrying the old paper-card must-know list, true/false misconception items, must-answer questions, per-lesson fog locator); (f) tab 符号表 = symbol/abbreviation table. User questions asked in chat are inserted as numbered Q blocks (global ask-order numbering) at the end of the relevant lesson/section before its <!-- Q-INSERT --> marker; the Q index rebuilds itself. v1.7 (2026-09-12): the one-screen card gains three agent-only rows — 脉络 lineage (origin / limits of prior practice / the disease it fixes / move and cost / where it leads, each item tagged with its source), 三镜 three-lens verdict (Robotics: does it work on a concrete system; AI: where the hard part is and what measurable quantity the paper turned it into; ML: why the method holds — each marked hard/soft/empty, plus which lens the paper mainly stands on and which is empty), and 钉子候选 nail candidate (a concrete question in the empty lens, who can fill it, how to verify; always marked candidate). The lecture tab opens with a mandatory 第 -1 课 lineage lesson with an inline lineage SVG. Cross-paper connections are now made by the agent but every link is tagged [原句]/[引用数据]/[agent 判断]; never link to the user's employer's papers. Step 3.5 fetches references/citations from the Semantic Scholar API into lineage.json (network allowed). qa.md / paper-card.md / lesson.html / drill.html are no longer generated (legacy schemas still govern the corresponding parts). Slides (.pptx) only on explicit request. LaTeX source ONLY (no PDF parsing). Three reading modes: Skim (3-line verdict, no files) / Core (predict-then-verify dialogue, answers land as Q blocks) / Teach (default). Cross-platform: same SKILL.md works in Claude Code / Codex CLI / Cursor.
 ---
 
 # read-paper —「先赌后验」式深读
@@ -60,7 +60,7 @@ description: Use whenever the user wants to read / summarize / understand / crit
 
 对每个承重公式，跑先赌后验：
 - 揭晓推导前，让用户押："这一项是干嘛的？把它去掉/改了会坏什么？"
-- 然后把讲解 + 推导作为 Q 块插进 note.html 对应节末尾(格式见 `references/note_schema_v2.md` §3),用 `$...$` / `$$...$$`(KaTeX)。
+- 然后把讲解 + 推导作为 Q 块插进 note.html 引发问题的位置正后面(格式见 `references/note_schema_v2.md` §3),用 `$...$` / `$$...$$`(KaTeX)。
 - 押错的那一项，在该 Q 块里用一行标出"⚠️ 我原以为…，其实…"，并同步落到一屏卡左栏「边界」——这是他的 1%。
 
 ### 4. 证据诚实度（Evidence）——批判性评估
@@ -105,8 +105,18 @@ description: Use whenever the user wants to read / summarize / understand / crit
 ### 三条硬规则(v1.6 新增)
 
 1. **收尾 = 一屏卡右栏四行由用户自己填满。** agent 不代填;用户口述时原样写入并标注日期,不润色。
-2. **Q 块的编号、位置、完整度**:全局按提问顺序递增;插在所属节末尾的 `<!-- Q-INSERT: id -->` 标记之前;详细度 ≥ chat;写后重读整文件核对 Q 号唯一、标记仍在、结构未破。
+2. **Q 块的编号、位置、完整度**:全局按提问顺序递增;**插在引发问题的那段 / 公式 / 框的正后面**(问题在哪冒出来就放哪;不针对具体位置的才放节末 `<!-- Q-INSERT: id -->` 标记前);详细度 ≥ chat;写后重读整文件核对 Q 号唯一、标记仍在、结构未破。
 3. **写完必须截图验证**(桌面 1280 + 手机 390):标签切换、一屏卡两栏、Q 索引、公式(KaTeX 不支持 `\textsc`,用 `\mathrm`)、SVG 文字不重叠、无整页横向滚动。没有浏览器工具就明说。
+
+### v1.7(2026-09-12):脉络与三镜(用户裁定三条:connect 解禁 / 允许联网拉引用 / 新三行全自动无右栏)
+
+- 一屏卡七行:脊椎 · **脉络** · **三镜** · 四格 · 边界 · 裁决 · **钉子候选**。加粗三行 agent 全自动填、不留右栏;收尾仍按原四行。规则见 `references/note_schema_v2.md` §9。
+- **v1.7.1(2026-09-12)一屏卡是一张图**:七行压缩进 `card.json` → `uv run <SKILL_DIR>/scripts/card_svg.py card.json --out <paper-dir>/card.svg` → Chrome 出 `card.png`(2x)→ svg 内联进 note 顶部、点图开 png;七行全文进折叠区,用户四个作答框在图下。画布 860 宽、正文 14px,在 note 栏内 1:1 显示。画法与每格字数上限见 `references/card_image_schema.md`,超字数删字不缩字号。
+- 讲义必有「第 -1 课·脉络课」(谱系 SVG + steelman 评审理由),放第 0 课之前。
+- 夯实加两道脉络题、一道三镜题。
+- **connect 规则改**:v1.3 的"不主动 connect"作废;现在主动连,但每条连线标 `[原句 Sec X]` / `[引用数据]` / `[agent 判断]`;仍不连用户在职公司的论文。
+- Step 3.5:`uv run scripts/lineage.py <arxiv-id> --out <paper-dir>/lineage.json` 拉 Semantic Scholar 的 references / citations;失败就明说,来处只用原句。
+- 动因:用户 09-12——"有锤子没钉子;读论文不能只为知识,要知道脉络、目的、修了什么弊病、为什么 best paper 级、用哪个社区的思路解的"。提案:`proposals/2026-09-12-lineage-three-lens.html`。
 
 ### 不迁移旧论文
 
@@ -159,12 +169,24 @@ description: Use whenever the user wants to read / summarize / understand / crit
 
 读 `<CWD>/<slug>/main.tex`。**严格 ground 在文本里**:每个 claim 都能从 .tex 找到出处,不能编。
 
-**Step 4 — Write note.html(v1.6 单文件:一屏卡 + Q 索引 + 四个 tab)**
+**Step 3.5 — Lineage(v1.7,允许联网)**
+
+执行:`uv run <SKILL_DIR>/scripts/lineage.py <arxiv-id> --out <CWD>/<slug>/lineage.json`。取 Semantic Scholar 的 references 与 citations(各前 15,按被引排序)。再读 main.tex 的 related work 段,把两边都支持的上游 / 下游写进一屏卡「脉络」行与第 -1 课;每条标出处。API 失败:report 里写明,脉络只用原句。
+
+**Step 3.6 — 录用与奖项核查(2026-09-14 用户要求:"你需要看看他是不是被 accept 了,是不是 best paper")**
+
+执行:`uv run <SKILL_DIR>/scripts/venue.py <arxiv-id> --out <paper-dir>/venue.json`。它读 arXiv 备注栏(作者常写 "accepted to X")、journal_ref、Semantic Scholar 的 venue。API 限流(429)很常见,这时直接抓网页:arXiv abs 页、作者主页 / 实验室书目页、IEEE Xplore / OpenReview、会议 awards 页。奖项**只能靠搜**:按 `search_queries` 里的三条搜,再搜 `<会议或期刊> best paper award <年>`。
+写进三处:`metadata.json` 的 `venue`(录用刊物 + 年 + DOI)和 `award`(`{"name","source"}`,没有就 `null`);一屏卡图元信息行「发表:… · 奖项:…」;report 里一句。
+规则:**没有可点开的来源就不写奖项**;一手来源(IEEE RAS / 会议官网 / 作者主页)写"已确认",只有新闻稿或二手页面写"据 X 报道,待官方页确认";都没有写"未查到"。预印本状态写"arXiv 预印本,未查到录用"。
+
+**Step 4 — Write note.html(v1.6 单文件:一屏卡 + Q 索引 + 四个 tab;v1.7 加脉络 / 三镜 / 钉子候选行与第 -1 课;v1.7.1 一屏卡为 card.svg 图,见 `references/card_image_schema.md`)**
 
 从 `<SKILL_DIR>/templates/note_v2.html` 起手,按 `<SKILL_DIR>/references/note_schema_v2.md` 填五个部分。各部分的内容硬约束:
 - **原文对照 tab**:按 `note_schema.md` —— 跟随 paper 章节顺序;每一个公式 / 表格 / figure / footnote / algorithm / 实验细节都转写;中文为主、术语首次中英对照;**不加 agent 评价、不加例子**;每节末尾留 `<!-- Q-INSERT: s<n> -->`。
 - **讲义 tab**:跨领域按 `lesson_schema.md` 写完整课程;主场只写第 0 课 + 各节要点导读。每课末尾留 `<!-- Q-INSERT: l<n> -->`。
 - **一屏卡左栏**:按 `paper-card_schema.md` 的脊椎 / 批判 / 裁决标准写,加本线四格;**右栏四个 textarea 留空**。
+- **(v1.7)脉络 / 三镜 / 钉子候选三行**:agent 全自动填,`row solo` 不带 textarea;脉络五格每格标出处;三镜每镜标硬 / 软 / 空并给"主要成立于哪一镜、哪一镜空";钉子候选必带"候选,未验证"。
+- **(v1.7)讲义第 -1 课脉络课**必有,含谱系 SVG 与 steelman 评审理由;夯实加两道脉络题(`data-lesson="lm1"`)、一道三镜题。
 - **夯实 tab**:按 `note_schema_v2.md` §4 分档;提取卡答案面 = 原 paper-card 的 K 件事 + 承重数学。
 - **符号表 tab**:按 `qa_schema.md` Q1 的 A–E 分组,覆盖讲义与原文里全部记号。
 - 长度不设上限,不要担心 token;图引用 `figs/<filename>`。
@@ -185,7 +207,8 @@ Chrome headless(或任何可用浏览器)截桌面 1280 宽与手机 390 宽各�
 - self-check 清单结果(按 note_schema_v2.md §8):
   - 原文 tab: section / equation / table / figure 全覆盖 ✓
   - 每节 / 每课末尾有 Q-INSERT 标记 ✓
-  - 一屏卡左栏四行齐、右栏空 ✓
+  - 一屏卡左栏四行齐、右栏空;脉络 / 三镜 / 钉子候选三行齐且每条脉络带出处 ✓
+  - lineage.json 已生成(或 API 失败已注明)✓
   - 桌面 + 手机截图已看 ✓
 - 推荐下一篇:queue.md 里下一个 TODO 的 slug
 
@@ -253,4 +276,9 @@ Chrome headless(或任何可用浏览器)截桌面 1280 宽与手机 390 宽各�
 5. 数学一律进 note.html（讲义推导框或 Q 块），不在聊天里堆公式。**符号表 tab 默认必填**。
 6. **鼓励跨领域类比提问**。当用户问 "这跟 X 一样吗?"（X 来自他熟悉的另一个领域），认真对照、把共享根 + 关键差异都列清楚——这种"跨领域看 pattern"的直觉很值钱，主动 prompt 用户用上自己的旧知识。答案作为 Q 块插进 note.html。
 8. **一屏卡右栏是用户的**。不代填、不润色;用户说"我读完了"但右栏是空的,提醒他填,不替他关掉这篇。
+9. **(v1.7)脉络里的每一条连线都要有出处标签**;没有出处的连线不写。三镜的"硬 / 软 / 空"是判决,不是描述——每镜必须落一个字。
+10. **(2026-09-12)主场之外的词,默认用户没见过。** 用户主场 = 模仿学习那一套(BC、diffusion policy、DAgger、teacher-student、VLA、遥操、在线 / 离线蒸馏),这些**不解释**,解释了反而啰嗦(用户原话:"BC diffusion 这种不需要解释")。主场之外的一切——规划器(RRT / PRM / 贪心)、接触动力学、控制理论、神经符号、动作捕捉、具体硬件(Allegro 手)、人名 / 机构名、本 skill 自己的行话(三镜、钉子候选)——在**每一个产物**里(一屏卡图、卡的七行、讲义、夯实、chat 回复)第一次出现就给一句白话解释,篇幅不设上限。拿不准算不算主场就解释。一屏卡图末尾的「名词」带必有,卡上出现的主场外词都在里面。
+11. **(2026-09-14)不再对照 Path-OPD。** 用户说"以后不需要你对照 path opd,我现在基本理解他的意思了"。一屏卡「去处」、裁决、钉子候选、讲义末课里不再写"对你 / 对 Path-OPD 意味着什么";70 线四格的名字(监督从哪来 / teacher 给什么 / student 怎么学 / 部署差距)照用,但格子里只写这篇论文自己的做法。用户主动问"这跟我的项目怎么连"时再答,答成 Q 块。
+12. **一屏卡右栏 agent 读不到。** 右栏存在浏览器 localStorage 里,不是文件。用户说"我填了,你看看"时,让他点卡片下方的「复制我的版本」按钮把四格贴进 chat,再评;不要假装看过。
+13. **录用与奖项是事实,不是印象。** 讲义里的 steelman("评审为什么给高分")是练习,必须和 Step 3.6 查到的实际录用 / 奖项分开写;卡上「发表」行只写查到的,写不出来源就写"未查到"。
 7. 这是 **v1 草稿，用户会在上面改**。用的过程中如果发现某步骤别扭/多余，主动提出来让他调，不要默默将就。**而且：发现的改进应该 fold 回这份 SKILL.md，不要只留在 memory 里**——memory 是 workaround，SKILL.md 才是 durable home。
